@@ -19,12 +19,20 @@ export interface TrayHandlers {
   onStop: () => void;
   onOpenPopover: (bounds: Electron.Rectangle) => void;
   onOpenDashboard: () => void;
+  onTogglePin: () => void;
   onQuit: () => void;
 }
 
 let tray: Tray | null = null;
 let handlers: TrayHandlers | null = null;
 let lastSnapshot: TimerSnapshot | null = null;
+let pinned = false;
+
+/** Update the pinned state so the context menu shows the right label. */
+export function setTrayPinned(value: boolean): void {
+  pinned = value;
+  if (tray) tray.setContextMenu(buildMenu());
+}
 
 export function createTray(h: TrayHandlers): Tray {
   handlers = h;
@@ -90,6 +98,7 @@ function buildMenu(): Menu {
     { label: 'Reset', enabled: !!s && (active || s.status !== 'idle'), click: () => handlers?.onReset() },
     { label: 'Stop session', enabled: active, click: () => handlers?.onStop() },
     { type: 'separator' },
+    { label: pinned ? 'Unpin timer' : 'Pin timer on top', click: () => handlers?.onTogglePin() },
     { label: 'Open dashboard', click: () => handlers?.onOpenDashboard() },
     { type: 'separator' },
     { label: 'Quit Deepbrew', click: () => handlers?.onQuit() }

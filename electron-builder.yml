@@ -10,6 +10,16 @@ directories:
 files:
   - out/**/*
   - package.json
+  # Trim better-sqlite3: keep the prebuilt .node, drop sources/build intermediates.
+  - "!**/node_modules/better-sqlite3/deps/**"
+  - "!**/node_modules/better-sqlite3/src/**"
+  - "!**/node_modules/better-sqlite3/build/Release/obj/**"
+  - "!**/node_modules/**/*.{o,obj,pdb,lib,exp,tlog,ipdb,iobj}"
+  # Drop non-Windows prebuilt binaries we can't use.
+  - "!**/node_modules/active-win/lib/binding/napi-*-darwin-*/**"
+
+# Keep only English Chromium locales (see scripts/after-pack.cjs).
+afterPack: scripts/after-pack.cjs
 
 extraResources:
   - from: resources

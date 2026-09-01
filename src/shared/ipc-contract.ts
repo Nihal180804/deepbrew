@@ -31,6 +31,8 @@ export const IPC = {
   winMaximizeToggle: 'window:maximize-toggle',
   winClose: 'window:close',
   winIsMaximized: 'window:is-maximized',
+  pinToggle: 'pin:toggle',
+  pinIsActive: 'pin:is-active',
   clipboardWriteImage: 'clipboard:write-image',
   savePng: 'file:save-png',
 
@@ -67,6 +69,9 @@ export interface KofeApi {
   toggleMaximizeWindow(): Promise<boolean>;
   closeWindow(): Promise<void>;
   isWindowMaximized(): Promise<boolean>;
+  /** Toggle the always-on-top floating mini timer; resolves to the new state. */
+  togglePin(): Promise<boolean>;
+  isPinned(): Promise<boolean>;
   copyImageToClipboard(dataUrl: string): Promise<{ ok: boolean }>;
   savePng(dataUrl: string, suggestedName: string): Promise<{ ok: boolean; path?: string }>;
 

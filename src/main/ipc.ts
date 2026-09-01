@@ -19,6 +19,8 @@ export interface IpcContext {
   onSettingsApplied: (settings: Settings) => void;
   openDashboard: (tab?: string) => void;
   onStatsChanged: () => void;
+  togglePin: () => boolean;
+  isPinned: () => boolean;
 }
 
 export function registerIpc(ctx: IpcContext): void {
@@ -104,6 +106,9 @@ export function registerIpc(ctx: IpcContext): void {
   ipcMain.handle(IPC.winIsMaximized, (e) => {
     return BrowserWindow.fromWebContents(e.sender)?.isMaximized() ?? false;
   });
+
+  ipcMain.handle(IPC.pinToggle, () => ctx.togglePin());
+  ipcMain.handle(IPC.pinIsActive, () => ctx.isPinned());
 
   ipcMain.handle(IPC.clipboardWriteImage, (_e, dataUrl: string) => {
     try {

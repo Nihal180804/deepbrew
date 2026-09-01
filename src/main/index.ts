@@ -5,13 +5,15 @@ import type { Settings, TimerSnapshot } from '@shared/types.js';
 import { getDb, closeDb } from './db/database.js';
 import { loadSettings } from './db/settings-store.js';
 import { TimerController } from './timer-controller.js';
-import { createTray, updateTray, destroyTray } from './tray.js';
+import { createTray, updateTray, destroyTray, setTrayPinned } from './tray.js';
 import {
   createPopover,
   togglePopover,
   hidePopover,
   openDashboard,
-  broadcast
+  broadcast,
+  togglePin,
+  isPinned
 } from './windows.js';
 import { registerIpc } from './ipc.js';
 import { registerShortcuts, unregisterShortcuts } from './shortcuts.js';
@@ -80,6 +82,10 @@ async function main(): Promise<void> {
       hidePopover();
       openDashboard();
     },
+    onTogglePin: () => {
+      const pinned = togglePin();
+      setTrayPinned(pinned);
+    },
     onQuit: () => quit()
   });
 
@@ -92,7 +98,13 @@ async function main(): Promise<void> {
       broadcast(IPC.settingsChanged, next);
     },
     openDashboard: (tab?: string) => openDashboard(tab),
-    onStatsChanged: () => broadcast(IPC.statsInvalidated, null)
+    onStatsChanged: () => broadcast(IPC.statsInvalidated, null),
+    togglePin: () => {
+      const pinned = togglePin();
+      setTrayPinned(pinned);
+      return pinned;
+    },
+    isPinned: () => isPinned()
   });
 
   applyShortcuts(settings);

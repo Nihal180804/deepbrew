@@ -34,7 +34,8 @@ export default defineConfig({
       rollupOptions: {
         input: {
           popover: resolve('src/renderer/popover.html'),
-          dashboard: resolve('src/renderer/dashboard.html')
+          dashboard: resolve('src/renderer/dashboard.html'),
+          pin: resolve('src/renderer/pin.html')
         }
       }
     }

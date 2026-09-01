@@ -60,14 +60,26 @@ function Popover() {
           <span className="pop-state">{stateLabel}</span>
           <span className="pop-clock">{formatClock(remainingMs)}</span>
         </div>
-        <button
-          className="pop-gear"
-          title="Settings"
-          aria-label="Settings"
-          onClick={() => void window.kofe.openDashboard('settings')}
-        >
-          ⚙
-        </button>
+        <div className="pop-top-actions">
+          <button
+            className="pop-gear"
+            title="Pin timer on top"
+            aria-label="Pin timer on top"
+            onClick={() => void window.kofe.togglePin()}
+          >
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+              <path d="M9 3h6l-1 6 3 3v2H7v-2l3-3-1-6zM12 14v7" />
+            </svg>
+          </button>
+          <button
+            className="pop-gear"
+            title="Settings"
+            aria-label="Settings"
+            onClick={() => void window.kofe.openDashboard('settings')}
+          >
+            ⚙
+          </button>
+        </div>
       </div>
 
       <div className={`pop-illo ${phase} ${status}`}>

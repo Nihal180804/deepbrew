@@ -30,6 +30,8 @@ const api: KofeApi = {
   toggleMaximizeWindow: () => ipcRenderer.invoke(IPC.winMaximizeToggle),
   closeWindow: () => ipcRenderer.invoke(IPC.winClose),
   isWindowMaximized: () => ipcRenderer.invoke(IPC.winIsMaximized),
+  togglePin: () => ipcRenderer.invoke(IPC.pinToggle),
+  isPinned: () => ipcRenderer.invoke(IPC.pinIsActive),
   copyImageToClipboard: (dataUrl) => ipcRenderer.invoke(IPC.clipboardWriteImage, dataUrl),
   savePng: (dataUrl, name) => ipcRenderer.invoke(IPC.savePng, dataUrl, name),
 

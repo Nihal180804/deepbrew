@@ -1,6 +1,6 @@
 {
   "name": "deepbrew",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Deepbrew — a minimalist, distraction-free focus-session timer that lives in the system tray.",
   "author": "Deepbrew",
   "license": "MIT",

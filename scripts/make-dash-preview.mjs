@@ -97,6 +97,8 @@ function mock(snapshot) {
   toggleMaximizeWindow: () => Promise.resolve(false),
   closeWindow: () => Promise.resolve(),
   isWindowMaximized: () => Promise.resolve(false),
+  togglePin: () => Promise.resolve(true),
+  isPinned: () => Promise.resolve(false),
   copyImageToClipboard: () => Promise.resolve({ ok: true }),
   savePng: () => Promise.resolve({ ok: true }),
   onTimerUpdate: () => () => {}, onSettingsChanged: () => () => {}, onStatsInvalidated: () => () => {}
@@ -119,4 +121,5 @@ const shortBreak = { status: 'running', phase: 'break', remainingMs: 4 * 60000 +
 
 makePreview('dashboard.html', runningFocus, 'dash');
 makePreview('popover.html', shortBreak, 'pop');
+makePreview('pin.html', runningFocus, 'pin');
 console.log('Wrote out/renderer/__preview-dash.html and __preview-pop.html');

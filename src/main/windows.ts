@@ -16,7 +16,7 @@ function iconPath(): string {
     : join(app.getAppPath(), 'resources', 'icon.png');
 }
 
-function rendererUrl(page: 'popover' | 'dashboard'): { url?: string; file?: string } {
+function rendererUrl(page: 'popover' | 'dashboard' | 'pin'): { url?: string; file?: string } {
   // In dev, electron-vite serves the renderer; in prod we load built files.
   const devUrl = process.env['ELECTRON_RENDERER_URL'];
   if (devUrl) return { url: `${devUrl}/${page}.html` };
@@ -25,6 +25,8 @@ function rendererUrl(page: 'popover' | 'dashboard'): { url?: string; file?: stri
 
 let popover: BrowserWindow | null = null;
 let dashboard: BrowserWindow | null = null;
+let pinWin: BrowserWindow | null = null;
+let pinBounds: { x: number; y: number } | null = null;
 
 export function getPopover(): BrowserWindow | null {
   return popover;
@@ -164,9 +166,69 @@ export function getDashboard(): BrowserWindow | null {
 
 /** Broadcast a message to every live renderer. */
 export function broadcast(channel: string, payload: unknown): void {
-  for (const win of [popover, dashboard]) {
+  for (const win of [popover, dashboard, pinWin]) {
     if (win && !win.isDestroyed()) {
       win.webContents.send(channel, payload);
     }
   }
+}
+
+/* ---------------- Pinned floating mini-timer ---------------- */
+
+export function isPinned(): boolean {
+  return !!(pinWin && !pinWin.isDestroyed());
+}
+
+/** Toggle the always-on-top mini timer. Returns the new pinned state. */
+export function togglePin(): boolean {
+  if (isPinned()) {
+    pinWin!.close();
+    return false;
+  }
+  createPin();
+  return true;
+}
+
+function createPin(): void {
+  const { workArea } = screen.getPrimaryDisplay();
+  const width = 208;
+  const height = 78;
+  pinWin = new BrowserWindow({
+    width,
+    height,
+    x: pinBounds ? pinBounds.x : workArea.x + workArea.width - width - 16,
+    y: pinBounds ? pinBounds.y : workArea.y + 16,
+    frame: false,
+    transparent: true,
+    resizable: false,
+    movable: true,
+    minimizable: false,
+    maximizable: false,
+    fullscreenable: false,
+    skipTaskbar: true,
+    alwaysOnTop: true,
+    hasShadow: true,
+    webPreferences: {
+      preload: preloadPath,
+      contextIsolation: true,
+      nodeIntegration: false,
+      sandbox: false
+    }
+  });
+  // Float above normal windows (and most fullscreen apps).
+  pinWin.setAlwaysOnTop(true, 'screen-saver');
+
+  const target = rendererUrl('pin');
+  if (target.url) void pinWin.loadURL(target.url);
+  else void pinWin.loadFile(target.file!);
+
+  pinWin.on('moved', () => {
+    if (pinWin && !pinWin.isDestroyed()) {
+      const b = pinWin.getBounds();
+      pinBounds = { x: b.x, y: b.y };
+    }
+  });
+  pinWin.on('closed', () => {
+    pinWin = null;
+  });
 }
