@@ -129,11 +129,15 @@ export function openDashboard(tab?: string): BrowserWindow {
     return dashboard;
   }
 
+  // Size the window relative to the display it opens on (the one under the
+  // cursor), so it fits a small laptop and grows on a large monitor.
+  const startDisp = screen.getDisplayNearestPoint(screen.getCursorScreenPoint());
+  const init = dashboardBounds(startDisp);
+
   dashboard = new BrowserWindow({
-    width: 960,
-    height: 680,
-    minWidth: 720,
-    minHeight: 520,
+    ...init,
+    minWidth: 640,
+    minHeight: 480,
     show: false,
     title: 'Deepbrew',
     icon: iconPath(),
@@ -154,12 +158,68 @@ export function openDashboard(tab?: string): BrowserWindow {
   if (target.url) void dashboard.loadURL(target.url + hash);
   else void dashboard.loadFile(target.file!, { hash: tab });
 
-  dashboard.once('ready-to-show', () => dashboard?.show());
+  dashboard.once('ready-to-show', () => {
+    applyDashboardZoom();
+    dashboard?.show();
+  });
+  // When dragged onto a different display, rescale the UI to that screen.
+  dashboard.on('moved', () => {
+    const id = screen.getDisplayMatching(dashboard!.getBounds()).id;
+    if (id !== dashboardDisplayId) {
+      dashboardDisplayId = id;
+      applyDashboardZoom();
+    }
+  });
   dashboard.on('closed', () => {
     dashboard = null;
   });
+  dashboardDisplayId = startDisp.id;
+  wireDashboardDisplayEvents();
 
   return dashboard;
+}
+
+const clamp = (v: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, v));
+
+/** Target window bounds for a display: ~80% of its work area, clamped, centred. */
+function dashboardBounds(display: Electron.Display): Electron.Rectangle {
+  const wa = display.workArea;
+  const width = clamp(Math.round(wa.width * 0.8), 760, 1280);
+  const height = clamp(Math.round(wa.height * 0.85), 520, 900);
+  return {
+    x: wa.x + Math.round((wa.width - width) / 2),
+    y: wa.y + Math.round((wa.height - height) / 2),
+    width,
+    height
+  };
+}
+
+/** Zoom the dashboard content to suit the display size (compact on a laptop,
+ *  larger on a big monitor). Baseline 1440×900 = 1.0x. */
+function applyDashboardZoom(): void {
+  if (!dashboard || dashboard.isDestroyed()) return;
+  const wa = screen.getDisplayMatching(dashboard.getBounds()).workArea;
+  const zoom = clamp(Math.min(wa.width / 1440, wa.height / 900), 0.85, 1.3);
+  dashboard.webContents.setZoomFactor(zoom);
+}
+
+let dashboardDisplayId: number | null = null;
+let dashboardDisplayEventsWired = false;
+
+/** Re-fit the dashboard when displays change (monitor plugged/unplugged, DPI). */
+function wireDashboardDisplayEvents(): void {
+  if (dashboardDisplayEventsWired) return;
+  dashboardDisplayEventsWired = true;
+  const refit = () => {
+    if (!dashboard || dashboard.isDestroyed()) return;
+    const disp = screen.getDisplayMatching(dashboard.getBounds());
+    dashboard.setBounds(dashboardBounds(disp));
+    dashboardDisplayId = disp.id;
+    applyDashboardZoom();
+  };
+  screen.on('display-metrics-changed', refit);
+  screen.on('display-added', refit);
+  screen.on('display-removed', refit);
 }
 
 export function getDashboard(): BrowserWindow | null {
