@@ -33,6 +33,8 @@ export const IPC = {
   winIsMaximized: 'window:is-maximized',
   pinToggle: 'pin:toggle',
   pinIsActive: 'pin:is-active',
+  pinMoveBy: 'pin:move-by',
+  pinSnap: 'pin:snap',
   clipboardWriteImage: 'clipboard:write-image',
   savePng: 'file:save-png',
 
@@ -72,6 +74,10 @@ export interface KofeApi {
   /** Toggle the always-on-top floating mini timer; resolves to the new state. */
   togglePin(): Promise<boolean>;
   isPinned(): Promise<boolean>;
+  /** Move the pinned window by a pixel delta (fire-and-forget, for dragging). */
+  pinMoveBy(dx: number, dy: number): void;
+  /** Snap the pinned window to the nearest screen corner. */
+  pinSnap(): void;
   copyImageToClipboard(dataUrl: string): Promise<{ ok: boolean }>;
   savePng(dataUrl: string, suggestedName: string): Promise<{ ok: boolean; path?: string }>;
 

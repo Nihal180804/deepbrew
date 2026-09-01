@@ -1,4 +1,4 @@
-import { StrictMode } from 'react';
+import { StrictMode, useEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import './styles.css';
 import { formatClock, formatDuration } from '@shared/timer/format.js';
@@ -11,6 +11,17 @@ function Popover() {
   const { snapshot, remainingMs, send } = useTimer();
   const { settings } = useSettings();
   const { stats } = useStats();
+  const [pinned, setPinned] = useState(false);
+
+  // The popover re-shows on each tray click; refresh the pin state each time.
+  useEffect(() => {
+    void window.kofe.isPinned().then(setPinned);
+    const onFocus = () => void window.kofe.isPinned().then(setPinned);
+    window.addEventListener('focus', onFocus);
+    return () => window.removeEventListener('focus', onFocus);
+  }, []);
+
+  const togglePin = () => void window.kofe.togglePin().then(setPinned);
 
   const status = snapshot?.status ?? 'idle';
   const phase = snapshot?.phase ?? 'work';
@@ -62,12 +73,12 @@ function Popover() {
         </div>
         <div className="pop-top-actions">
           <button
-            className="pop-gear"
-            title="Pin timer on top"
-            aria-label="Pin timer on top"
-            onClick={() => void window.kofe.togglePin()}
+            className={`pop-gear ${pinned ? 'active' : ''}`}
+            title={pinned ? 'Unpin floating timer' : 'Pin timer on top'}
+            aria-label={pinned ? 'Unpin floating timer' : 'Pin timer on top'}
+            onClick={togglePin}
           >
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill={pinned ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
               <path d="M9 3h6l-1 6 3 3v2H7v-2l3-3-1-6zM12 14v7" />
             </svg>
           </button>

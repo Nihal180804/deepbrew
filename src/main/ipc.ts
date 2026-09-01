@@ -21,6 +21,8 @@ export interface IpcContext {
   onStatsChanged: () => void;
   togglePin: () => boolean;
   isPinned: () => boolean;
+  movePinBy: (dx: number, dy: number) => void;
+  snapPin: () => void;
 }
 
 export function registerIpc(ctx: IpcContext): void {
@@ -109,6 +111,8 @@ export function registerIpc(ctx: IpcContext): void {
 
   ipcMain.handle(IPC.pinToggle, () => ctx.togglePin());
   ipcMain.handle(IPC.pinIsActive, () => ctx.isPinned());
+  ipcMain.on(IPC.pinMoveBy, (_e, dx: number, dy: number) => ctx.movePinBy(dx, dy));
+  ipcMain.on(IPC.pinSnap, () => ctx.snapPin());
 
   ipcMain.handle(IPC.clipboardWriteImage, (_e, dataUrl: string) => {
     try {

@@ -13,7 +13,9 @@ import {
   openDashboard,
   broadcast,
   togglePin,
-  isPinned
+  isPinned,
+  movePinBy,
+  snapPin
 } from './windows.js';
 import { registerIpc } from './ipc.js';
 import { registerShortcuts, unregisterShortcuts } from './shortcuts.js';
@@ -104,7 +106,9 @@ async function main(): Promise<void> {
       setTrayPinned(pinned);
       return pinned;
     },
-    isPinned: () => isPinned()
+    isPinned: () => isPinned(),
+    movePinBy: (dx, dy) => movePinBy(dx, dy),
+    snapPin: () => snapPin()
   });
 
   applyShortcuts(settings);

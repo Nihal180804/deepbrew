@@ -189,6 +189,32 @@ export function togglePin(): boolean {
   return true;
 }
 
+/** Move the pinned window by a pixel delta (used while dragging it). */
+export function movePinBy(dx: number, dy: number): void {
+  if (!pinWin || pinWin.isDestroyed()) return;
+  const [x, y] = pinWin.getPosition();
+  const nx = Math.round(x + dx);
+  const ny = Math.round(y + dy);
+  pinWin.setPosition(nx, ny);
+  pinBounds = { x: nx, y: ny };
+}
+
+/** Snap the pinned window to the nearest corner of its display's work area. */
+export function snapPin(): void {
+  if (!pinWin || pinWin.isDestroyed()) return;
+  const b = pinWin.getBounds();
+  const { workArea } = screen.getDisplayMatching(b);
+  const m = 16;
+  const centerX = b.x + b.width / 2;
+  const centerY = b.y + b.height / 2;
+  const left = centerX < workArea.x + workArea.width / 2;
+  const top = centerY < workArea.y + workArea.height / 2;
+  const nx = left ? workArea.x + m : workArea.x + workArea.width - b.width - m;
+  const ny = top ? workArea.y + m : workArea.y + workArea.height - b.height - m;
+  pinWin.setPosition(nx, ny, true);
+  pinBounds = { x: nx, y: ny };
+}
+
 function createPin(): void {
   const { workArea } = screen.getPrimaryDisplay();
   const width = 208;
