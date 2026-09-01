@@ -1,0 +1,52 @@
+{
+  "name": "deepbrew",
+  "version": "0.1.0",
+  "description": "Deepbrew — a minimalist, distraction-free focus-session timer that lives in the system tray.",
+  "author": "Deepbrew",
+  "license": "MIT",
+  "main": "./out/main/index.js",
+  "scripts": {
+    "dev": "electron-vite dev",
+    "start": "electron-vite preview",
+    "build": "npm run typecheck && electron-vite build",
+    "postinstall": "electron-builder install-app-deps",
+    "typecheck:node": "tsc --noEmit -p tsconfig.node.json",
+    "typecheck:web": "tsc --noEmit -p tsconfig.web.json",
+    "typecheck": "npm run typecheck:node && npm run typecheck:web",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "illos:crop": "node scripts/crop-illustrations.mjs",
+    "illos:vectorize": "node scripts/vectorize-illustrations.mjs",
+    "icons:gen": "node scripts/generate-icons.mjs",
+    "lint": "eslint . --ext .ts,.tsx",
+    "pack:dir": "npm run build && electron-builder --dir",
+    "pack:win": "npm run build && electron-builder --win",
+    "pack:linux": "npm run build && electron-builder --linux",
+    "pack:all": "npm run build && electron-builder --win --linux"
+  },
+  "dependencies": {
+    "@napi-rs/canvas": "^0.1.100",
+    "better-sqlite3": "^11.8.1"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.12",
+    "@types/node": "^22.10.0",
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "@typescript-eslint/eslint-plugin": "^8.18.0",
+    "@typescript-eslint/parser": "^8.18.0",
+    "@vitejs/plugin-react": "^4.3.4",
+    "electron": "^33.2.1",
+    "electron-builder": "^25.1.8",
+    "electron-vite": "^2.3.0",
+    "eslint": "^8.57.1",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "typescript": "^5.7.2",
+    "vite": "^5.4.11",
+    "vitest": "^2.1.8"
+  },
+  "optionalDependencies": {
+    "active-win": "^8.2.1"
+  }
+}

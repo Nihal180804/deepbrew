@@ -1,0 +1,82 @@
+appId: com.deepbrew.app
+productName: Deepbrew
+copyright: Copyright © 2026 Deepbrew
+
+directories:
+  output: release
+  buildResources: build
+
+# Bundle the built main/preload/renderer plus runtime resources (icons).
+files:
+  - out/**/*
+  - package.json
+
+extraResources:
+  - from: resources
+    to: .
+    filter:
+      - "**/*"
+
+# Native modules (better-sqlite3, @napi-rs/canvas, active-win) must not be
+# ASAR-packed so their binaries load at runtime.
+asar: true
+asarUnpack:
+  - "**/node_modules/better-sqlite3/**"
+  - "**/node_modules/@napi-rs/**"
+  - "**/node_modules/active-win/**"
+
+# The native modules (better-sqlite3 for Electron's ABI, @napi-rs/canvas,
+# active-win's N-API binary) are already present as prebuilts, so skip the
+# rebuild step (which would need a C++ toolchain).
+npmRebuild: false
+
+win:
+  target:
+    - target: nsis
+      arch: [x64]
+  icon: build/icon.png
+
+nsis:
+  oneClick: false
+  perMachine: false
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+  shortcutName: Deepbrew
+
+linux:
+  target:
+    - AppImage
+    - deb
+    - rpm
+  icon: build/icon.png
+  category: Utility
+  synopsis: Minimalist focus-session timer in your system tray
+  description: >
+    Deepbrew is a distraction-free Pomodoro-style focus timer that lives in
+    the system tray, with local-only analytics, streaks, and a shareable focus
+    card. No account, no cloud.
+  desktop:
+    entry:
+      Name: Deepbrew
+      Comment: Minimalist focus-session timer
+      Categories: Utility;
+
+deb:
+  depends:
+    - libgtk-3-0
+    - libnotify4
+    - libnss3
+    - libxss1
+    - libxtst6
+    - xdg-utils
+    # libappindicator provides the tray on GNOME/Unity-style desktops.
+    - libayatana-appindicator3-1
+
+rpm:
+  depends:
+    - libappindicator-gtk3
+
+# App-level protections.
+extraMetadata:
+  main: out/main/index.js
