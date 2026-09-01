@@ -184,8 +184,8 @@ const clamp = (v: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, v
 /** Target window bounds for a display: ~80% of its work area, clamped, centred. */
 function dashboardBounds(display: Electron.Display): Electron.Rectangle {
   const wa = display.workArea;
-  const width = clamp(Math.round(wa.width * 0.8), 760, 1280);
-  const height = clamp(Math.round(wa.height * 0.85), 520, 900);
+  const width = clamp(Math.round(wa.width * 0.82), 760, 1440);
+  const height = clamp(Math.round(wa.height * 0.86), 520, 960);
   return {
     x: wa.x + Math.round((wa.width - width) / 2),
     y: wa.y + Math.round((wa.height - height) / 2),
@@ -199,7 +199,7 @@ function dashboardBounds(display: Electron.Display): Electron.Rectangle {
 function applyDashboardZoom(): void {
   if (!dashboard || dashboard.isDestroyed()) return;
   const wa = screen.getDisplayMatching(dashboard.getBounds()).workArea;
-  const zoom = clamp(Math.min(wa.width / 1440, wa.height / 900), 0.85, 1.3);
+  const zoom = clamp(Math.min(wa.width / 1360, wa.height / 850), 0.9, 1.45);
   dashboard.webContents.setZoomFactor(zoom);
 }
 

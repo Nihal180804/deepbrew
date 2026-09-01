@@ -677,12 +677,18 @@ button {
 .app-body {
   flex: 1;
   overflow-y: auto;
+  display: flex;
+  flex-direction: column;
 }
 
 .page {
-  max-width: 900px;
-  margin: 0 auto;
-  padding: 20px 28px 40px;
+  width: 100%;
+  max-width: 1040px;
+  /* auto margins center the page both ways; in a flex column they collapse to
+     0 when the content is taller than the viewport, so tall pages (Stats /
+     Settings) still top-align and scroll normally instead of clipping. */
+  margin: auto;
+  padding: 28px 32px;
 }
 .page-head {
   display: flex;
