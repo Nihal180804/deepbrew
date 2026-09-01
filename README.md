@@ -171,8 +171,15 @@ If you can't install a build toolchain, you can fetch a prebuilt
 ```bash
 npm install --ignore-scripts
 node node_modules/electron/install.js
-cd node_modules/better-sqlite3 && npx prebuild-install --runtime=electron --target=$(node -p "require('electron/package.json').version") --arch=x64
+# better-sqlite3 for Electron's ABI:
+cd node_modules/better-sqlite3 && npx prebuild-install --runtime=electron --target=$(node -p "require('electron/package.json').version") --arch=x64 && cd ../..
+# active-win tracking binary (N-API, works in both Node and Electron):
+cd node_modules/active-win && npx node-pre-gyp install --update-binary && cd ../..
 ```
+
+> **Active-app tracking:** on Windows, `active-win` needs its N-API binary
+> (fetched by the command above). Without it, tracking silently records nothing.
+> The prebuilt installer already bundles it.
 
 ---
 
