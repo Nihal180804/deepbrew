@@ -162,6 +162,19 @@ export function openDashboard(tab?: string): BrowserWindow {
     applyDashboardZoom();
     dashboard?.show();
   });
+  dashboard.webContents.on('did-finish-load', () => applyDashboardZoom());
+  // Rescale the UI whenever the window size changes (resize / maximize /
+  // fullscreen), so bigger windows get bigger content, not just margins.
+  let resizeTimer: NodeJS.Timeout | null = null;
+  const rescale = () => {
+    if (resizeTimer) clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(() => applyDashboardZoom(), 60);
+  };
+  dashboard.on('resize', rescale);
+  dashboard.on('maximize', () => applyDashboardZoom());
+  dashboard.on('unmaximize', () => applyDashboardZoom());
+  dashboard.on('enter-full-screen', () => applyDashboardZoom());
+  dashboard.on('leave-full-screen', () => applyDashboardZoom());
   // When dragged onto a different display, rescale the UI to that screen.
   dashboard.on('moved', () => {
     const id = screen.getDisplayMatching(dashboard!.getBounds()).id;
@@ -194,12 +207,13 @@ function dashboardBounds(display: Electron.Display): Electron.Rectangle {
   };
 }
 
-/** Zoom the dashboard content to suit the display size (compact on a laptop,
- *  larger on a big monitor). Baseline 1440×900 = 1.0x. */
+/** Zoom the dashboard content to suit the CURRENT window size, so a maximized
+ *  or fullscreen window scales the whole UI up instead of just adding side
+ *  margins. Baseline ~1000×680 content = 1.0x. */
 function applyDashboardZoom(): void {
   if (!dashboard || dashboard.isDestroyed()) return;
-  const wa = screen.getDisplayMatching(dashboard.getBounds()).workArea;
-  const zoom = clamp(Math.min(wa.width / 1360, wa.height / 850), 0.9, 1.45);
+  const [w, h] = dashboard.getContentSize();
+  const zoom = clamp(Math.min(w / 1000, h / 680), 0.9, 1.7);
   dashboard.webContents.setZoomFactor(zoom);
 }
 
