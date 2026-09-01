@@ -1,5 +1,7 @@
 import { BrowserWindow, screen, app } from 'electron';
 import { join } from 'node:path';
+import { PIN_SIZES, type PinSize } from '@shared/types.js';
+import { loadSettings } from './db/settings-store.js';
 
 /**
  * Owns the two renderer windows:
@@ -179,6 +181,11 @@ export function isPinned(): boolean {
   return !!(pinWin && !pinWin.isDestroyed());
 }
 
+/** The pin window (or null) — used by boot-time diagnostics. */
+export function getPinWindow(): BrowserWindow | null {
+  return pinWin;
+}
+
 /** Toggle the always-on-top mini timer. Returns the new pinned state. */
 export function togglePin(): boolean {
   if (isPinned()) {
@@ -187,6 +194,18 @@ export function togglePin(): boolean {
   }
   createPin();
   return true;
+}
+
+/** Resize the pinned window to a size preset, keeping it on screen. */
+export function resizePin(size: PinSize): void {
+  if (!pinWin || pinWin.isDestroyed()) return;
+  const { w, h } = PIN_SIZES[size];
+  const b = pinWin.getBounds();
+  const { workArea } = screen.getDisplayMatching(b);
+  const x = Math.max(workArea.x, Math.min(b.x, workArea.x + workArea.width - w));
+  const y = Math.max(workArea.y, Math.min(b.y, workArea.y + workArea.height - h));
+  pinWin.setBounds({ x, y, width: w, height: h });
+  pinBounds = { x, y };
 }
 
 /** Move the pinned window by a pixel delta (used while dragging it). */
@@ -217,8 +236,7 @@ export function snapPin(): void {
 
 function createPin(): void {
   const { workArea } = screen.getPrimaryDisplay();
-  const width = 208;
-  const height = 78;
+  const { w: width, h: height } = PIN_SIZES[loadSettings().pinSize];
   pinWin = new BrowserWindow({
     width,
     height,

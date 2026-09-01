@@ -76,16 +76,17 @@ const settings = {
   autoTransition: true, autostart: false, theme: 'system', notificationsEnabled: true,
   notificationSound: 'chime', soundEnabled: true, trackingEnabled: true,
   activeAppTrackingEnabled: true, productAnalyticsEnabled: false, updateCheckEnabled: true,
-  smartNudgeIdleMinutes: 3,
+  smartNudgeIdleMinutes: 3, pinSize: 'compact',
   shortcuts: { startPause: 'CommandOrControl+Shift+Space', reset: 'CommandOrControl+Shift+R', openDashboard: 'CommandOrControl+Shift+D' }
 };
 
-function mock(snapshot) {
+function mock(snapshot, settingsOverride = {}) {
+  const s = { ...settings, ...settingsOverride };
   return `window.kofe = {
   getTimer: () => Promise.resolve(${JSON.stringify(snapshot)}),
   sendCommand: () => Promise.resolve(${JSON.stringify(snapshot)}),
-  getSettings: () => Promise.resolve(${JSON.stringify(settings)}),
-  updateSettings: (p) => Promise.resolve(Object.assign(${JSON.stringify(settings)}, p)),
+  getSettings: () => Promise.resolve(${JSON.stringify(s)}),
+  updateSettings: (p) => Promise.resolve(Object.assign(${JSON.stringify(s)}, p)),
   getStats: () => Promise.resolve(${JSON.stringify(stats)}),
   getSessions: () => Promise.resolve(${JSON.stringify(sessions)}),
   getPersona: () => Promise.resolve(${JSON.stringify(persona)}),
@@ -105,8 +106,8 @@ function mock(snapshot) {
 };`;
 }
 
-function makePreview(pageHtml, snapshot, suffix) {
-  writeFileSync(join(outDir, `kofe-mock-${suffix}.js`), mock(snapshot));
+function makePreview(pageHtml, snapshot, suffix, settingsOverride = {}) {
+  writeFileSync(join(outDir, `kofe-mock-${suffix}.js`), mock(snapshot, settingsOverride));
   let html = readFileSync(join(outDir, pageHtml), 'utf8');
   html = html.replace(/<meta http-equiv="Content-Security-Policy"[^>]*>/, '');
   html = html.replace('<body', `<body`).replace(
@@ -121,5 +122,7 @@ const shortBreak = { status: 'running', phase: 'break', remainingMs: 4 * 60000 +
 
 makePreview('dashboard.html', runningFocus, 'dash');
 makePreview('popover.html', shortBreak, 'pop');
-makePreview('pin.html', runningFocus, 'pin');
-console.log('Wrote out/renderer/__preview-dash.html and __preview-pop.html');
+makePreview('pin.html', runningFocus, 'pin', { pinSize: 'compact' });
+makePreview('pin.html', runningFocus, 'pinm', { pinSize: 'medium' });
+makePreview('pin.html', runningFocus, 'pinl', { pinSize: 'large' });
+console.log('Wrote preview html files to out/renderer/');

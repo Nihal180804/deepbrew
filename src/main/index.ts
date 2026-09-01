@@ -15,7 +15,8 @@ import {
   togglePin,
   isPinned,
   movePinBy,
-  snapPin
+  snapPin,
+  resizePin
 } from './windows.js';
 import { registerIpc } from './ipc.js';
 import { registerShortcuts, unregisterShortcuts } from './shortcuts.js';
@@ -97,6 +98,7 @@ async function main(): Promise<void> {
       applyTheme(next);
       syncAutostart(next);
       applyShortcuts(next);
+      resizePin(next.pinSize);
       broadcast(IPC.settingsChanged, next);
     },
     openDashboard: (tab?: string) => openDashboard(tab),

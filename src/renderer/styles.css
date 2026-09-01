@@ -1182,3 +1182,48 @@ body.pin-dragging .pin {
   color: var(--bg);
   opacity: 0.9;
 }
+
+/* Pin size variants */
+.pin.medium {
+  padding: 0 12px 0 12px;
+}
+.pin.medium .pin-clock {
+  font-size: 32px;
+}
+.pin.large {
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 14px 12px 12px;
+}
+.pin.large .pin-clock {
+  font-size: 32px;
+  text-align: center;
+}
+.pin.large .pin-text {
+  align-items: center;
+  text-align: center;
+}
+.pin.large .pin-controls {
+  justify-content: center;
+  margin-top: 4px;
+  opacity: 0.8;
+}
+.pin-illo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  color: var(--text);
+  background: radial-gradient(circle, var(--accent-soft) 0%, transparent 70%);
+  flex-shrink: 0;
+}
+.pin.medium .pin-illo {
+  width: 66px;
+  height: 66px;
+}
+.pin.large .pin-illo {
+  width: 120px;
+  height: 120px;
+}

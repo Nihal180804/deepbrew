@@ -139,6 +139,20 @@ export function SettingsPanel({ settings, update, onToast }: Props) {
         <Row name="Start on login" desc="Launch Deepbrew automatically when you sign in.">
           <Toggle on={settings.autostart} onChange={(v) => update({ autostart: v })} />
         </Row>
+        <Row
+          name="Pinned timer size"
+          desc="Size of the always-on-top floating timer. You can also cycle it from the pin's resize button."
+        >
+          <select
+            className="control"
+            value={settings.pinSize}
+            onChange={(e) => update({ pinSize: e.target.value as Settings['pinSize'] })}
+          >
+            <option value="compact">Compact</option>
+            <option value="medium">Medium (avatar)</option>
+            <option value="large">Large (avatar)</option>
+          </select>
+        </Row>
       </div>
 
       <div className="panel">

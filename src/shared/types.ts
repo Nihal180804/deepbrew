@@ -4,6 +4,15 @@ import type { Phase, Status } from './timer/types.js';
 
 export type ThemePreference = 'light' | 'dark' | 'system';
 
+/** Pinned floating-timer size presets (window pixel dimensions). */
+export type PinSize = 'compact' | 'medium' | 'large';
+export const PIN_SIZES: Record<PinSize, { w: number; h: number }> = {
+  compact: { w: 210, h: 76 }, // bar: time only
+  medium: { w: 300, h: 110 }, // bar + small avatar
+  large: { w: 240, h: 250 } // card with a prominent avatar
+};
+export const PIN_SIZE_ORDER: PinSize[] = ['compact', 'medium', 'large'];
+
 export interface Settings {
   workMinutes: number;
   breakMinutes: number;
@@ -25,6 +34,8 @@ export interface Settings {
   updateCheckEnabled: boolean;
   /** Smart Nudge: warn after this many minutes of idle time mid-session. */
   smartNudgeIdleMinutes: number;
+  /** Size of the pinned floating timer. */
+  pinSize: PinSize;
   /** Global keyboard shortcuts (Electron accelerator strings). */
   shortcuts: {
     startPause: string;
@@ -49,6 +60,7 @@ export const DEFAULT_SETTINGS: Settings = {
   productAnalyticsEnabled: false,
   updateCheckEnabled: true,
   smartNudgeIdleMinutes: 3,
+  pinSize: 'compact',
   shortcuts: {
     startPause: 'CommandOrControl+Shift+Space',
     reset: 'CommandOrControl+Shift+R',
