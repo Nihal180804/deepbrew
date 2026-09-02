@@ -1,6 +1,6 @@
 import { BrowserWindow, screen, app } from 'electron';
 import { join } from 'node:path';
-import { PIN_SIZES, type PinSize } from '@shared/types.js';
+import { PIN_SIZES } from '@shared/types.js';
 import { loadSettings } from './db/settings-store.js';
 
 /**
@@ -213,7 +213,11 @@ function dashboardBounds(display: Electron.Display): Electron.Rectangle {
 function applyDashboardZoom(): void {
   if (!dashboard || dashboard.isDestroyed()) return;
   const [w, h] = dashboard.getContentSize();
-  const zoom = clamp(Math.min(w / 1000, h / 680), 0.9, 1.7);
+  // Baselines are the natural content size at 1.0x. Height is the binding
+  // constraint (the timer card + stat row is tall), so keep it close to the
+  // real content height, otherwise short laptop screens over-zoom and the page
+  // spills into a scrollbar. Allow shrinking below 1.0 so it always fits.
+  const zoom = clamp(Math.min(w / 1040, h / 900), 0.8, 1.6);
   dashboard.webContents.setZoomFactor(zoom);
 }
 
@@ -270,15 +274,25 @@ export function togglePin(): boolean {
   return true;
 }
 
-/** Resize the pinned window to a size preset, keeping it on screen. */
-export function resizePin(size: PinSize): void {
+/**
+ * Resize the pinned window to fit its rendered content. The renderer measures
+ * the visible card (it varies with the size preset, DPI, and system font) and
+ * reports the exact CSS pixels, so nothing is ever clipped regardless of the
+ * display. Keeps the window on screen after growing.
+ */
+export function resizePinTo(width: number, height: number): void {
   if (!pinWin || pinWin.isDestroyed()) return;
-  const { w, h } = PIN_SIZES[size];
+  const w = Math.max(120, Math.round(width));
+  const h = Math.max(48, Math.round(height));
+  const [cw, ch] = pinWin.getContentSize();
+  if (cw === w && ch === h) return; // already the right size — avoid churn
+  pinWin.setContentSize(w, h);
+  // Re-clamp onto the current display's work area now that the size changed.
   const b = pinWin.getBounds();
   const { workArea } = screen.getDisplayMatching(b);
-  const x = Math.max(workArea.x, Math.min(b.x, workArea.x + workArea.width - w));
-  const y = Math.max(workArea.y, Math.min(b.y, workArea.y + workArea.height - h));
-  pinWin.setBounds({ x, y, width: w, height: h });
+  const x = Math.max(workArea.x, Math.min(b.x, workArea.x + workArea.width - b.width));
+  const y = Math.max(workArea.y, Math.min(b.y, workArea.y + workArea.height - b.height));
+  pinWin.setPosition(x, y);
   pinBounds = { x, y };
 }
 
@@ -330,7 +344,12 @@ function createPin(): void {
       preload: preloadPath,
       contextIsolation: true,
       nodeIntegration: false,
-      sandbox: false
+      sandbox: false,
+      // Keep the renderer running at full rate when another app is focused.
+      // Otherwise Chromium throttles this background window and the
+      // self-sizing ResizeObserver lags, leaving the card clipped until it
+      // regains focus.
+      backgroundThrottling: false
     }
   });
   // Float above normal windows (and most fullscreen apps).

@@ -2,16 +2,40 @@ import { useEffect, useState } from 'react';
 
 /**
  * A browser-fullscreen-style title bar for the frameless dashboard window: it
- * stays hidden and slides down only when the cursor is pushed to the very top
- * edge (a thin hover "region" reveals it; it stays while hovered). The bar is a
- * drag handle (double-click maximizes) and hosts the minimize / maximize /
- * close controls.
+ * stays hidden and slides down whenever the cursor moves near the top of the
+ * window (anywhere across the width, not just the very edge), and hides again
+ * once the cursor drops away. The bar is a drag handle (double-click maximizes)
+ * and hosts the minimize / maximize / close controls.
  */
 export function TitleBar() {
   const [maximized, setMaximized] = useState(false);
+  const [visible, setVisible] = useState(false);
 
   useEffect(() => {
     void window.kofe.isWindowMaximized().then(setMaximized);
+  }, []);
+
+  // Reveal the bar when the pointer approaches the top edge; hide it once the
+  // pointer moves back down past the bar. The reveal zone spans the full width.
+  useEffect(() => {
+    const REVEAL_AT = 56; // start showing within 56px of the top
+    const HIDE_BELOW = 72; // hide once the cursor drops past the bar
+    const onMove = (e: MouseEvent) => {
+      if (e.clientY <= REVEAL_AT) setVisible(true);
+      else if (e.clientY > HIDE_BELOW) setVisible(false);
+    };
+    // Moving the cursor ONTO the drag-region title bar makes Chromium fire a
+    // document `mouseleave` — ignore that (it's near the top); only hide when
+    // the pointer genuinely leaves downward, past the bar.
+    const onLeave = (e: MouseEvent) => {
+      if (e.clientY > HIDE_BELOW) setVisible(false);
+    };
+    window.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseleave', onLeave);
+    return () => {
+      window.removeEventListener('mousemove', onMove);
+      document.removeEventListener('mouseleave', onLeave);
+    };
   }, []);
 
   const toggleMax = () => {
@@ -20,8 +44,7 @@ export function TitleBar() {
 
   return (
     <>
-      <div className="titlebar-region" aria-hidden />
-      <div className="titlebar" onDoubleClick={toggleMax}>
+      <div className={`titlebar${visible ? ' visible' : ''}`} onDoubleClick={toggleMax}>
         <span className="titlebar-title">Deepbrew</span>
         <div className="titlebar-controls">
           <button

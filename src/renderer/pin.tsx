@@ -1,4 +1,4 @@
-import { StrictMode, useRef } from 'react';
+import { StrictMode, useLayoutEffect, useRef } from 'react';
 import { createRoot } from 'react-dom/client';
 import './styles.css';
 import { formatClock } from '@shared/timer/format.js';
@@ -10,8 +10,12 @@ import { Illustration, illustrationFor } from './components/Illustration.js';
 /**
  * Always-on-top floating mini timer. Drag it anywhere (manual pointer drag via
  * screen-coordinate deltas — reliable on transparent windows), double-click to
- * snap to a corner, and cycle through size presets (compact / medium / large;
- * medium & large show the avatar).
+ * open the full dashboard, and cycle through size presets (compact / medium /
+ * large; medium & large show the avatar).
+ *
+ * The window is sized to fit the rendered card: a ResizeObserver measures the
+ * card (which varies with the preset, DPI, and system font) and asks main to
+ * match the window to it, so content is never clipped on any display.
  */
 function Pin() {
   const { snapshot, remainingMs, send } = useTimer();
@@ -20,6 +24,38 @@ function Pin() {
   const size: PinSize = settings?.pinSize ?? 'compact';
   const last = useRef({ x: 0, y: 0 });
   const dragging = useRef(false);
+  const rootRef = useRef<HTMLDivElement>(null);
+
+  // Keep the OS window exactly as big as the visible card.
+  useLayoutEffect(() => {
+    const el = rootRef.current;
+    if (!el) return;
+    let prev = { w: 0, h: 0 };
+    const report = () => {
+      // getBoundingClientRect is sub-pixel accurate; ceil so we never end up a
+      // fraction short (which would clip the card's edge).
+      const r = el.getBoundingClientRect();
+      const w = Math.ceil(r.width);
+      const h = Math.ceil(r.height);
+      if (w > 0 && h > 0 && (w !== prev.w || h !== prev.h)) {
+        prev = { w, h };
+        window.kofe.pinResize(w, h);
+      }
+    };
+    report();
+    const ro = new ResizeObserver(report);
+    ro.observe(el);
+    // Re-measure once web fonts finish loading (text reflows wider) and after a
+    // couple of frames, so the first paint isn't left clipped.
+    const raf = requestAnimationFrame(report);
+    document.fonts?.ready.then(report).catch(() => {});
+    window.addEventListener('load', report);
+    return () => {
+      ro.disconnect();
+      cancelAnimationFrame(raf);
+      window.removeEventListener('load', report);
+    };
+  }, []);
 
   const onPointerDown = (e: React.PointerEvent) => {
     if (e.button !== 0) return;
@@ -113,29 +149,31 @@ function Pin() {
   );
 
   return (
-    <div
-      className={`pin ${size} ${phase} ${status}`}
-      onPointerDown={onPointerDown}
-      onPointerMove={onPointerMove}
-      onPointerUp={onPointerUp}
-      onDoubleClick={() => window.kofe.pinSnap()}
-      title="Drag to move · double-click to snap to a corner"
-    >
-      {size === 'large' ? (
-        <>
-          {avatar}
-          {clockBlock}
-          {controls}
-        </>
-      ) : (
-        <>
-          <div className="pin-main">
-            {showAvatar ? avatar : <span className={`pin-dot ${phase}`} />}
+    <div className="pin-shell" ref={rootRef}>
+      <div
+        className={`pin ${size} ${phase} ${status}`}
+        onPointerDown={onPointerDown}
+        onPointerMove={onPointerMove}
+        onPointerUp={onPointerUp}
+        onDoubleClick={() => void window.kofe.openDashboard()}
+        title="Drag to move · double-click to open the dashboard"
+      >
+        {size === 'large' ? (
+          <>
+            {avatar}
             {clockBlock}
-          </div>
-          {controls}
-        </>
-      )}
+            {controls}
+          </>
+        ) : (
+          <>
+            <div className="pin-main">
+              {showAvatar ? avatar : <span className={`pin-dot ${phase}`} />}
+              {clockBlock}
+            </div>
+            {controls}
+          </>
+        )}
+      </div>
     </div>
   );
 }

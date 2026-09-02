@@ -1,15 +1,31 @@
 /**
- * A monochrome "app icon" chip. Since the app tracks only app *names* (never
- * fetches real icons or URLs — privacy-first), we render a tidy rounded square
- * with the app's initials. Deterministic size; used in Top Activity + App Split.
+ * An "app icon" chip. When we have the app's real icon (extracted locally from
+ * its executable — never fetched from the network) we show it; otherwise we
+ * fall back to a tidy monochrome square with the app's initials. Deterministic
+ * size; used in Top Activity + App Split.
  */
 
 interface Props {
   name: string;
+  iconUrl?: string | null;
   size?: number;
 }
 
-export function AppChip({ name, size = 30 }: Props) {
+export function AppChip({ name, iconUrl, size = 30 }: Props) {
+  if (iconUrl) {
+    return (
+      <img
+        className="app-chip app-chip-img"
+        src={iconUrl}
+        alt={name}
+        title={name}
+        width={size}
+        height={size}
+        style={{ width: size, height: size }}
+      />
+    );
+  }
+
   const initials = toInitials(name);
   return (
     <span

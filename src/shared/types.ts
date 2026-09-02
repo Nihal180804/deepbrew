@@ -4,12 +4,17 @@ import type { Phase, Status } from './timer/types.js';
 
 export type ThemePreference = 'light' | 'dark' | 'system';
 
-/** Pinned floating-timer size presets (window pixel dimensions). */
+/**
+ * Pinned floating-timer size presets. These are only the INITIAL window size
+ * hints used when the pin first opens; the renderer measures the actual card
+ * and reports its exact size (IPC.pinResize), so the window always fits its
+ * content regardless of DPI or system font.
+ */
 export type PinSize = 'compact' | 'medium' | 'large';
 export const PIN_SIZES: Record<PinSize, { w: number; h: number }> = {
-  compact: { w: 210, h: 76 }, // bar: time only
-  medium: { w: 300, h: 110 }, // bar + small avatar
-  large: { w: 240, h: 250 } // card with a prominent avatar
+  compact: { w: 224, h: 74 }, // bar: time only
+  medium: { w: 296, h: 104 }, // bar + small avatar
+  large: { w: 240, h: 278 } // card with a prominent avatar
 };
 export const PIN_SIZE_ORDER: PinSize[] = ['compact', 'medium', 'large'];
 
@@ -105,6 +110,9 @@ export interface AppStat {
   appName: string;
   focusMs: number;
   sessions: number;
+  /** Data-URL of the app's real icon, extracted locally from its executable;
+   *  null when no icon has been captured yet (falls back to initials). */
+  iconDataUrl?: string | null;
 }
 
 export interface StatsSummary {

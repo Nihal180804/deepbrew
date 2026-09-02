@@ -341,8 +341,9 @@ button {
 .stat-card {
   background: var(--bg-elev);
   border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 16px 18px;
+  border-radius: 16px;
+  padding: 18px 20px;
+  min-height: 96px;
 }
 .stat-card .label {
   font-size: 12px;
@@ -641,7 +642,9 @@ button {
 .topnav {
   display: flex;
   justify-content: center;
-  padding: 16px 0 6px;
+  /* Top padding clears the 34px auto-hiding title bar so that, when revealed,
+     the bar sits in the gap above the pill instead of painting over it. */
+  padding: 42px 0 6px;
 }
 .topnav-pill {
   display: inline-flex;
@@ -683,23 +686,24 @@ button {
 
 .page {
   width: 100%;
-  max-width: 1200px;
-  /* auto margins center the page both ways; in a flex column they collapse to
-     0 when the content is taller than the viewport, so tall pages (Stats /
-     Settings) still top-align and scroll normally instead of clipping. */
-  margin: auto;
-  padding: 28px 32px;
+  max-width: 1080px;
+  /* Center horizontally, but top-align: the content sits right under the nav
+     (like the reference) instead of floating in the vertical middle. Tall pages
+     (Stats / Settings) still top-align and scroll normally. */
+  margin: 0 auto;
+  padding: 20px 32px 32px;
 }
 .page-head {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
   gap: 16px;
-  margin-bottom: 20px;
+  margin-bottom: 24px;
 }
 .page-head h1 {
   margin: 0 0 3px;
-  font-size: 24px;
+  font-size: 26px;
+  letter-spacing: -0.2px;
 }
 .page-head .sub {
   margin: 0;
@@ -726,46 +730,48 @@ button {
 .timer-card {
   display: grid;
   grid-template-columns: 1fr 300px;
-  gap: 20px;
+  gap: 24px;
   align-items: center;
   background: var(--bg-elev);
   border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 34px 34px;
-  margin-bottom: 22px;
+  border-radius: 24px;
+  padding: 40px 44px;
+  margin-bottom: 24px;
 }
 .timer-main {
   min-width: 0;
 }
 .timer-clock {
-  font-size: 76px;
+  font-size: 80px;
   font-weight: 800;
   line-height: 1;
   letter-spacing: 1px;
   font-variant-numeric: tabular-nums;
 }
 .timer-state {
-  margin-top: 12px;
+  margin-top: 14px;
   font-size: 13px;
   font-weight: 600;
   color: var(--text-soft);
 }
 .timer-caption {
-  margin: 4px 0 18px;
-  font-size: 18px;
-  font-weight: 600;
+  margin: 5px 0 22px;
+  font-size: 20px;
+  font-weight: 700;
 }
 .timer-primary {
   width: 100%;
-  max-width: 420px;
-  padding: 14px;
+  max-width: 440px;
+  padding: 16px;
   border-radius: 999px;
   font-size: 15px;
 }
 .timer-secondary {
   display: flex;
+  justify-content: center;
   gap: 8px;
-  margin-top: 10px;
+  margin-top: 12px;
+  max-width: 440px;
   flex-wrap: wrap;
 }
 .timer-secondary .btn {
@@ -785,7 +791,7 @@ button {
 .quick-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 14px;
+  gap: 16px;
 }
 .stat-sub {
   font-size: 12px;
@@ -808,6 +814,13 @@ button {
   font-weight: 700;
   letter-spacing: 0.3px;
   flex-shrink: 0;
+}
+/* Real extracted app icon: show the artwork itself (no monochrome fill). */
+.app-chip-img {
+  background: var(--bg-sunk);
+  object-fit: contain;
+  padding: 2px;
+  border: 1px solid var(--border);
 }
 
 /* Sparkline */
@@ -1027,14 +1040,6 @@ button {
 }
 
 /* Auto-hiding title bar for the frameless dashboard window (F11-style reveal) */
-.titlebar-region {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 8px;
-  z-index: 1000;
-}
 .titlebar {
   position: fixed;
   top: 0;
@@ -1053,8 +1058,9 @@ button {
   z-index: 1001;
   -webkit-app-region: drag;
 }
-/* Reveal when the cursor hits the top edge, and keep it while hovered. */
-.titlebar-region:hover ~ .titlebar,
+/* Revealed when the cursor nears the top edge (driven by TitleBar.tsx), and
+   kept visible while the pointer is over the bar itself. */
+.titlebar.visible,
 .titlebar:hover {
   transform: translateY(0);
 }
@@ -1088,23 +1094,32 @@ button {
 
 /* ---------------- Pinned floating mini-timer ---------------- */
 .pin-body {
+  margin: 0;
   background: transparent;
   overflow: hidden;
   user-select: none;
 }
+/* The window is sized to this shell (card + gutter). The gutter gives the drop
+   shadow room so it isn't clipped by the transparent window edge. */
+.pin-shell {
+  display: inline-block;
+  padding: 10px;
+}
 .pin {
-  height: 100vh;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 8px;
-  padding: 0 10px 0 14px;
+  width: max-content;
+  min-height: 52px;
+  padding: 8px 10px 8px 14px;
   background: var(--bg-elev);
   border: 1px solid var(--border);
   border-radius: 18px;
   box-shadow: var(--shadow);
   cursor: grab;
   touch-action: none;
+  box-sizing: border-box;
 }
 .pin:active,
 body.pin-dragging,
@@ -1191,7 +1206,7 @@ body.pin-dragging .pin {
 
 /* Pin size variants */
 .pin.medium {
-  padding: 0 12px 0 12px;
+  padding: 8px 12px;
 }
 .pin.medium .pin-clock {
   font-size: 32px;
@@ -1200,8 +1215,9 @@ body.pin-dragging .pin {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 4px;
-  padding: 14px 12px 12px;
+  width: 220px;
+  gap: 6px;
+  padding: 16px 14px 14px;
 }
 .pin.large .pin-clock {
   font-size: 32px;

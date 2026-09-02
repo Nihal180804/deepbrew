@@ -9,7 +9,8 @@ import {
 import type { TimerConfig, TimerState, TimerEvent, Phase } from '@shared/timer/types.js';
 import type { Settings, TimerSnapshot } from '@shared/types.js';
 import { insertSession } from './db/analytics-store.js';
-import { getActiveAppName } from './active-window.js';
+import { getActiveApp } from './active-window.js';
+import { cacheAppIcon } from './app-icons.js';
 
 /**
  * Runtime owner of the timer. Holds the single source of truth (TimerState),
@@ -266,8 +267,12 @@ export class TimerController {
     if (this.state.status !== 'running' || this.state.phase !== 'work') return;
     const settings = this.deps.getSettings();
     if (!settings.trackingEnabled || !settings.activeAppTrackingEnabled) return;
-    const name = await getActiveAppName();
-    if (name) this.appSamples.set(name, (this.appSamples.get(name) ?? 0) + 1);
+    const active = await getActiveApp();
+    if (active) {
+      this.appSamples.set(active.name, (this.appSamples.get(active.name) ?? 0) + 1);
+      // Extract & cache the app's real icon (best-effort, fire-and-forget).
+      void cacheAppIcon(active.name, active.path);
+    }
   }
 
   // ---- smart nudge --------------------------------------------------------

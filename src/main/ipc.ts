@@ -23,6 +23,7 @@ export interface IpcContext {
   isPinned: () => boolean;
   movePinBy: (dx: number, dy: number) => void;
   snapPin: () => void;
+  resizePinTo: (width: number, height: number) => void;
 }
 
 export function registerIpc(ctx: IpcContext): void {
@@ -113,6 +114,7 @@ export function registerIpc(ctx: IpcContext): void {
   ipcMain.handle(IPC.pinIsActive, () => ctx.isPinned());
   ipcMain.on(IPC.pinMoveBy, (_e, dx: number, dy: number) => ctx.movePinBy(dx, dy));
   ipcMain.on(IPC.pinSnap, () => ctx.snapPin());
+  ipcMain.on(IPC.pinResize, (_e, w: number, h: number) => ctx.resizePinTo(w, h));
 
   ipcMain.handle(IPC.clipboardWriteImage, (_e, dataUrl: string) => {
     try {

@@ -35,6 +35,7 @@ export const IPC = {
   pinIsActive: 'pin:is-active',
   pinMoveBy: 'pin:move-by',
   pinSnap: 'pin:snap',
+  pinResize: 'pin:resize',
   clipboardWriteImage: 'clipboard:write-image',
   savePng: 'file:save-png',
 
@@ -78,6 +79,8 @@ export interface KofeApi {
   pinMoveBy(dx: number, dy: number): void;
   /** Snap the pinned window to the nearest screen corner. */
   pinSnap(): void;
+  /** Resize the pinned window to fit its rendered content (CSS px). */
+  pinResize(width: number, height: number): void;
   copyImageToClipboard(dataUrl: string): Promise<{ ok: boolean }>;
   savePng(dataUrl: string, suggestedName: string): Promise<{ ok: boolean; path?: string }>;
 

@@ -50,14 +50,29 @@ export async function isActiveWindowSupported(): Promise<{ supported: boolean; n
   return { supported, note };
 }
 
-/** Returns the focused application's name, or null if unavailable. */
-export async function getActiveAppName(): Promise<string | null> {
+export interface ActiveApp {
+  name: string;
+  /** Absolute path to the app's executable (used to extract its icon). */
+  path: string | null;
+}
+
+/** Returns the focused application's name + executable path, or null. */
+export async function getActiveApp(): Promise<ActiveApp | null> {
   await ensureLoaded();
   if (!supported || !activeWinFn) return null;
   try {
-    const result = (await activeWinFn()) as { owner?: { name?: string } } | undefined;
-    return result?.owner?.name ?? null;
+    const result = (await activeWinFn()) as
+      | { owner?: { name?: string; path?: string } }
+      | undefined;
+    const name = result?.owner?.name;
+    if (!name) return null;
+    return { name, path: result?.owner?.path ?? null };
   } catch {
     return null;
   }
+}
+
+/** Returns the focused application's name, or null if unavailable. */
+export async function getActiveAppName(): Promise<string | null> {
+  return (await getActiveApp())?.name ?? null;
 }

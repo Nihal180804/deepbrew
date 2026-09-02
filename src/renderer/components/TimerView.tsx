@@ -120,7 +120,7 @@ export function TimerView({ onOpenPersona }: Props) {
           <div className="label">Top activity</div>
           <div className="chip-row">
             {(stats?.topApps ?? []).slice(0, 5).map((a) => (
-              <AppChip key={a.appName} name={a.appName} />
+              <AppChip key={a.appName} name={a.appName} iconUrl={a.iconDataUrl} />
             ))}
             {(!stats || stats.topApps.length === 0) && <span className="stat-sub">No data yet</span>}
           </div>

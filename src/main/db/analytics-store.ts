@@ -115,12 +115,14 @@ export function getTopApps(limit = 6, sinceDays = 30): AppStat[] {
   const from = startOfDay(sinceDays - 1);
   const rows = getDb()
     .prepare(
-      `SELECT app_name AS appName,
-              COALESCE(SUM(actual_ms),0) AS focusMs,
-              COUNT(*) AS sessions
-       FROM sessions
-       WHERE phase='work' AND app_name IS NOT NULL AND started_at >= ?
-       GROUP BY app_name ORDER BY focusMs DESC LIMIT ?`
+      `SELECT s.app_name AS appName,
+              COALESCE(SUM(s.actual_ms),0) AS focusMs,
+              COUNT(*) AS sessions,
+              i.data_url AS iconDataUrl
+       FROM sessions s
+       LEFT JOIN app_icons i ON i.app_name = s.app_name
+       WHERE s.phase='work' AND s.app_name IS NOT NULL AND s.started_at >= ?
+       GROUP BY s.app_name ORDER BY focusMs DESC LIMIT ?`
     )
     .all(from, limit) as AppStat[];
   return rows;
@@ -182,12 +184,14 @@ export function getPersonaData(range: 'today' | 'week'): PersonaCardData {
 
   const topApps = getDb()
     .prepare(
-      `SELECT app_name AS appName,
-              COALESCE(SUM(actual_ms),0) AS focusMs,
-              COUNT(*) AS sessions
-       FROM sessions
-       WHERE phase='work' AND app_name IS NOT NULL AND started_at >= ?
-       GROUP BY app_name ORDER BY focusMs DESC LIMIT 3`
+      `SELECT s.app_name AS appName,
+              COALESCE(SUM(s.actual_ms),0) AS focusMs,
+              COUNT(*) AS sessions,
+              i.data_url AS iconDataUrl
+       FROM sessions s
+       LEFT JOIN app_icons i ON i.app_name = s.app_name
+       WHERE s.phase='work' AND s.app_name IS NOT NULL AND s.started_at >= ?
+       GROUP BY s.app_name ORDER BY focusMs DESC LIMIT 3`
     )
     .all(from) as AppStat[];
 
@@ -252,4 +256,5 @@ export function exportAllData(): { sessions: SessionRecord[] } {
 
 export function deleteAllData(): void {
   getDb().prepare('DELETE FROM sessions').run();
+  getDb().prepare('DELETE FROM app_icons').run();
 }

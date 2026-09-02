@@ -34,6 +34,7 @@ const api: KofeApi = {
   isPinned: () => ipcRenderer.invoke(IPC.pinIsActive),
   pinMoveBy: (dx: number, dy: number) => ipcRenderer.send(IPC.pinMoveBy, dx, dy),
   pinSnap: () => ipcRenderer.send(IPC.pinSnap),
+  pinResize: (w: number, h: number) => ipcRenderer.send(IPC.pinResize, w, h),
   copyImageToClipboard: (dataUrl) => ipcRenderer.invoke(IPC.clipboardWriteImage, dataUrl),
   savePng: (dataUrl, name) => ipcRenderer.invoke(IPC.savePng, dataUrl, name),
 

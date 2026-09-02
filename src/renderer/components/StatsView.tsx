@@ -38,7 +38,7 @@ export function StatsView() {
           <div className="label">Top activity</div>
           <div className="chip-row" style={{ marginTop: 8 }}>
             {stats.topApps.slice(0, 5).map((a) => (
-              <AppChip key={a.appName} name={a.appName} />
+              <AppChip key={a.appName} name={a.appName} iconUrl={a.iconDataUrl} />
             ))}
             {stats.topApps.length === 0 && <span className="stat-sub">No data</span>}
           </div>
@@ -78,7 +78,7 @@ export function StatsView() {
             <div className="applist">
               {stats.topApps.map((a) => (
                 <div className="app-row" key={a.appName}>
-                  <AppChip name={a.appName} size={28} />
+                  <AppChip name={a.appName} iconUrl={a.iconDataUrl} size={28} />
                   <div className="app-meta">
                     <div className="app-name">{a.appName}</div>
                     <div className="app-bar-track">

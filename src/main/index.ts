@@ -16,7 +16,7 @@ import {
   isPinned,
   movePinBy,
   snapPin,
-  resizePin
+  resizePinTo
 } from './windows.js';
 import { registerIpc } from './ipc.js';
 import { registerShortcuts, unregisterShortcuts } from './shortcuts.js';
@@ -98,7 +98,8 @@ async function main(): Promise<void> {
       applyTheme(next);
       syncAutostart(next);
       applyShortcuts(next);
-      resizePin(next.pinSize);
+      // The pin window resizes itself: the renderer measures the card after the
+      // new size preset renders and reports it via IPC.pinResize.
       broadcast(IPC.settingsChanged, next);
     },
     openDashboard: (tab?: string) => openDashboard(tab),
@@ -110,7 +111,8 @@ async function main(): Promise<void> {
     },
     isPinned: () => isPinned(),
     movePinBy: (dx, dy) => movePinBy(dx, dy),
-    snapPin: () => snapPin()
+    snapPin: () => snapPin(),
+    resizePinTo: (w, h) => resizePinTo(w, h)
   });
 
   applyShortcuts(settings);

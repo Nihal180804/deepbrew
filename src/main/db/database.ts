@@ -50,6 +50,15 @@ function migrate(database: Database.Database): void {
 
     CREATE INDEX IF NOT EXISTS idx_sessions_started ON sessions(started_at);
     CREATE INDEX IF NOT EXISTS idx_sessions_phase   ON sessions(phase);
+
+    -- Real application icons, extracted locally from each app's executable and
+    -- cached as a small PNG data-URL (keyed by the same app_name we store on
+    -- sessions). Never fetched from the network.
+    CREATE TABLE IF NOT EXISTS app_icons (
+      app_name   TEXT PRIMARY KEY,
+      data_url   TEXT NOT NULL,
+      updated_at INTEGER NOT NULL
+    );
   `);
 }
 
