@@ -27,7 +27,6 @@ export interface Settings {
   autostart: boolean;
   theme: ThemePreference;
   notificationsEnabled: boolean;
-  notificationSound: string; // 'none' | 'chime' | 'bell' | ...
   soundEnabled: boolean;
   /** Master switch for local analytics + active-app tracking. */
   trackingEnabled: boolean;
@@ -58,7 +57,6 @@ export const DEFAULT_SETTINGS: Settings = {
   autostart: false,
   theme: 'system',
   notificationsEnabled: true,
-  notificationSound: 'chime',
   soundEnabled: true,
   trackingEnabled: true,
   activeAppTrackingEnabled: true,

@@ -62,6 +62,14 @@ export function createPopover(): BrowserWindow {
   if (target.url) void popover.loadURL(target.url);
   else void popover.loadFile(target.file!);
 
+  // Apply the fit-to-workarea zoom once the page is loaded (setZoomFactor set
+  // before load can be dropped); positionPopover refines it per-display on show.
+  popover.webContents.on('did-finish-load', () => {
+    if (popover && !popover.isDestroyed()) {
+      fitPopover(popover, screen.getPrimaryDisplay().workArea);
+    }
+  });
+
   // Hide (not close) when it loses focus, like a native menu-bar popover.
   popover.on('blur', () => {
     if (popover && !popover.webContents.isDevToolsOpened()) popover.hide();
@@ -86,10 +94,30 @@ export function togglePopover(trayBounds?: Electron.Rectangle): void {
   win.focus();
 }
 
+/** Popover design size at 1.0x zoom. */
+const POPOVER_BASE = { w: 340, h: 600 };
+
+/**
+ * Scale the popover down to fit the display's work area (short laptop screens
+ * are often less than 600px tall, which would clip the card's bottom). Returns
+ * the fitted content size to position against.
+ */
+function fitPopover(win: BrowserWindow, workArea: Electron.Rectangle): { width: number; height: number } {
+  const zoom = Math.max(0.6, Math.min(1, (workArea.height - 16) / POPOVER_BASE.h));
+  const width = Math.round(POPOVER_BASE.w * zoom);
+  const height = Math.round(POPOVER_BASE.h * zoom);
+  win.setContentSize(width, height);
+  win.webContents.setZoomFactor(zoom);
+  return { width, height };
+}
+
 function positionPopover(win: BrowserWindow, trayBounds?: Electron.Rectangle): void {
-  const { width, height } = win.getBounds();
-  const display = screen.getPrimaryDisplay();
+  // Prefer the display the tray sits on; fall back to the primary display.
+  const display = trayBounds
+    ? screen.getDisplayNearestPoint({ x: trayBounds.x, y: trayBounds.y })
+    : screen.getPrimaryDisplay();
   const workArea = display.workArea;
+  const { width, height } = fitPopover(win, workArea);
 
   let x: number;
   let y: number;
@@ -299,9 +327,13 @@ export function resizePinTo(width: number, height: number): void {
 /** Move the pinned window by a pixel delta (used while dragging it). */
 export function movePinBy(dx: number, dy: number): void {
   if (!pinWin || pinWin.isDestroyed()) return;
+  // Ignore bad deltas — a non-finite value would make setPosition throw a
+  // native "conversion failure" and crash the main process.
+  if (!Number.isFinite(dx) || !Number.isFinite(dy)) return;
   const [x, y] = pinWin.getPosition();
   const nx = Math.round(x + dx);
   const ny = Math.round(y + dy);
+  if (!Number.isFinite(nx) || !Number.isFinite(ny)) return;
   pinWin.setPosition(nx, ny);
   pinBounds = { x: nx, y: ny };
 }

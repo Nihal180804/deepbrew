@@ -134,7 +134,7 @@ describe('EXTEND', () => {
 describe('phase completion via TICK', () => {
   it('auto-transitions work -> break -> work when enabled', () => {
     const c = cfg({ workDurationMs: 10 * MIN, breakDurationMs: 2 * MIN, autoTransition: true });
-    let s = reduce(createInitialState(c), { type: 'START' }, c, 0).state;
+    const s = reduce(createInitialState(c), { type: 'START' }, c, 0).state;
 
     // Tick before completion: no change.
     let res = reduce(s, { type: 'TICK' }, c, 5 * MIN);
@@ -189,7 +189,7 @@ describe('RESET', () => {
 describe('STOP', () => {
   it('marks an incomplete work phase as abandoned and returns to idle', () => {
     const s0 = createInitialState(cfg());
-    let s = reduce(s0, { type: 'START' }, cfg(), 0).state;
+    const s = reduce(s0, { type: 'START' }, cfg(), 0).state;
     const res = reduce(s, { type: 'STOP' }, cfg(), 5 * MIN);
     const types = res.events.map((e) => e.type);
     expect(types).toContain('session-abandoned');

@@ -69,7 +69,7 @@ function Pin() {
     if (!dragging.current) return;
     const dx = e.screenX - last.current.x;
     const dy = e.screenY - last.current.y;
-    if (dx || dy) {
+    if (Number.isFinite(dx) && Number.isFinite(dy) && (dx || dy)) {
       last.current = { x: e.screenX, y: e.screenY };
       window.kofe.pinMoveBy(dx, dy);
     }
@@ -156,7 +156,11 @@ function Pin() {
         onPointerMove={onPointerMove}
         onPointerUp={onPointerUp}
         onDoubleClick={() => void window.kofe.openDashboard()}
-        title="Drag to move · double-click to open the dashboard"
+        onContextMenu={(e) => {
+          e.preventDefault();
+          window.kofe.pinSnap();
+        }}
+        title="Drag to move · double-click to open the dashboard · right-click to snap to a corner"
       >
         {size === 'large' ? (
           <>

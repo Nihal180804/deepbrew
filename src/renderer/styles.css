@@ -392,6 +392,9 @@ button {
   font-weight: 700;
   margin-top: 6px;
   font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .stat-card .value .unit {
   font-size: 15px;
@@ -412,33 +415,59 @@ button {
   font-size: 16px;
 }
 
-/* Bar chart */
+/* Bar chart with y-axis gridlines */
+.chart-plot {
+  margin-left: 34px; /* gutter for the y-axis labels */
+}
 .bars {
+  position: relative;
   display: flex;
   align-items: flex-end;
-  gap: 6px;
-  height: 160px;
-  padding-top: 8px;
+  gap: 8px;
+  height: 200px;
+}
+.grid-line {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 0;
+  border-top: 1px dashed var(--border);
+  z-index: 0;
+}
+.grid-label {
+  position: absolute;
+  right: calc(100% + 8px);
+  top: -7px;
+  font-size: 10px;
+  color: var(--text-faint);
+  white-space: nowrap;
 }
 .bar-col {
+  position: relative;
+  z-index: 1;
   flex: 1;
   display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 6px;
+  align-items: flex-end;
+  justify-content: center;
   height: 100%;
-  justify-content: flex-end;
 }
 .bar {
   width: 100%;
-  max-width: 26px;
+  max-width: 30px;
   background: var(--text);
-  border-radius: 3px 3px 0 0;
+  border-radius: 4px 4px 0 0;
   min-height: 2px;
   transition: height 0.3s;
 }
-.bar-label {
-  font-size: 10px;
+.bars-x {
+  display: flex;
+  gap: 8px;
+  margin: 8px 0 0 34px;
+}
+.x-label {
+  flex: 1;
+  text-align: center;
+  font-size: 11px;
   color: var(--text-faint);
 }
 
@@ -500,45 +529,104 @@ button {
 }
 
 /* Settings */
-.setting-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 20px;
-  padding: 14px 0;
-  border-bottom: 1px solid var(--border);
+/* ---------------- Settings (macOS-style grouped list) ---------------- */
+.settings {
+  max-width: 640px;
+  margin: 0 auto;
 }
-.setting-row:last-child {
-  border-bottom: none;
+.settings > h1 {
+  font-size: 26px;
+  letter-spacing: -0.2px;
+  margin: 0 0 3px;
 }
-.setting-row .info {
-  max-width: 60%;
+.settings-group {
+  margin-top: 26px;
 }
-.setting-row .info .name {
-  font-weight: 600;
-  font-size: 14px;
-}
-.setting-row .info .desc {
+.group-title {
   font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
   color: var(--text-soft);
-  margin-top: 3px;
-  line-height: 1.4;
+  margin: 0 0 8px 2px;
 }
-
-.control input[type="number"],
-.control input[type="text"],
-.control select {
+.group-card {
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  overflow: hidden;
+}
+.group-footer {
+  font-size: 12px;
+  color: var(--text-faint);
+  line-height: 1.45;
+  margin: 8px 2px 0;
+}
+.srow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 16px;
+  min-height: 54px;
+}
+.srow + .srow {
+  border-top: 1px solid var(--border);
+}
+.srow-main {
+  min-width: 0;
+}
+.srow-name {
+  font-size: 14px;
+  font-weight: 500;
+}
+.srow-desc {
+  font-size: 12px;
+  color: var(--text-faint);
+  margin-top: 2px;
+  line-height: 1.35;
+}
+.srow-control {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.srow-control input[type="number"],
+.srow-control input[type="text"],
+.srow-control select {
   background: var(--bg-sunk);
   border: 1px solid var(--border);
   color: var(--text);
-  border-radius: var(--radius-sm);
-  padding: 8px 10px;
-  font-size: 14px;
+  border-radius: 8px;
+  padding: 7px 10px;
+  font-size: 13px;
   font-family: inherit;
-  width: 120px;
 }
-.control input[type="text"] {
-  width: 200px;
+.srow-control input[type="number"] {
+  width: 64px;
+  text-align: right;
+}
+.srow-control input[type="text"] {
+  width: 210px;
+}
+.srow-control select {
+  min-width: 130px;
+}
+.unit-label {
+  font-size: 13px;
+  color: var(--text-faint);
+}
+.srow-buttons {
+  flex-wrap: wrap;
+  justify-content: flex-start;
+  gap: 10px;
+}
+.settings-footer {
+  font-size: 12px;
+  color: var(--text-faint);
+  text-align: center;
+  margin-top: 24px;
 }
 
 /* Toggle switch */
@@ -929,6 +1017,18 @@ button {
   gap: 22px;
 }
 
+/* Stats: Focused-Time chart beside the App Split (chart takes more room). */
+.stats-split {
+  display: grid;
+  grid-template-columns: 1.7fr 1fr;
+  gap: 22px;
+  align-items: start;
+  margin-bottom: 22px;
+}
+.stats-split .panel {
+  margin-bottom: 0;
+}
+
 /* App split list */
 .applist {
   display: flex;
@@ -1037,7 +1137,8 @@ button {
   .quick-grid {
     grid-template-columns: repeat(2, 1fr);
   }
-  .split-grid {
+  .split-grid,
+  .stats-split {
     grid-template-columns: 1fr;
   }
 }
