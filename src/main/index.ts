@@ -33,6 +33,17 @@ import { maybeSendAppOpenPing } from './product-analytics.js';
 let controller: TimerController;
 let isQuitting = false;
 
+// Safety net: never let a recoverable error (e.g. a native window call
+// rejecting an odd coordinate mid-drag) crash the whole app with Electron's
+// fatal "A JavaScript error occurred in the main process" dialog. Log and
+// carry on; genuine fatal errors still surface in dev via the console.
+process.on('uncaughtException', (err) => {
+  console.error('[main] uncaught exception:', err);
+});
+process.on('unhandledRejection', (reason) => {
+  console.error('[main] unhandled rejection:', reason);
+});
+
 // Single-instance: a second launch just focuses/open the popover.
 const gotLock = app.requestSingleInstanceLock();
 if (!gotLock) {

@@ -324,18 +324,42 @@ export function resizePinTo(width: number, height: number): void {
   pinBounds = { x, y };
 }
 
+/** Union of all displays' bounds, with overscan so a window can sit partly off
+ *  screen while dragging. Used to clamp the pin to a sane, in-range position. */
+function displaySpan(): { minX: number; minY: number; maxX: number; maxY: number } {
+  let minX = Infinity;
+  let minY = Infinity;
+  let maxX = -Infinity;
+  let maxY = -Infinity;
+  for (const d of screen.getAllDisplays()) {
+    minX = Math.min(minX, d.bounds.x);
+    minY = Math.min(minY, d.bounds.y);
+    maxX = Math.max(maxX, d.bounds.x + d.bounds.width);
+    maxY = Math.max(maxY, d.bounds.y + d.bounds.height);
+  }
+  const pad = 2000;
+  return { minX: minX - pad, minY: minY - pad, maxX: maxX + pad, maxY: maxY + pad };
+}
+
 /** Move the pinned window by a pixel delta (used while dragging it). */
 export function movePinBy(dx: number, dy: number): void {
   if (!pinWin || pinWin.isDestroyed()) return;
-  // Ignore bad deltas — a non-finite value would make setPosition throw a
-  // native "conversion failure" and crash the main process.
   if (!Number.isFinite(dx) || !Number.isFinite(dy)) return;
-  const [x, y] = pinWin.getPosition();
-  const nx = Math.round(x + dx);
-  const ny = Math.round(y + dy);
-  if (!Number.isFinite(nx) || !Number.isFinite(ny)) return;
-  pinWin.setPosition(nx, ny);
-  pinBounds = { x: nx, y: ny };
+  try {
+    const [x, y] = pinWin.getPosition();
+    const span = displaySpan();
+    // Clamp into real display space: a bad delta (seen with fractional DPI on
+    // some laptops) could otherwise produce a coordinate outside the range
+    // setPosition accepts, throwing a native "conversion failure" that crashes
+    // the whole main process.
+    const nx = clamp(Math.round(x + dx), span.minX, span.maxX);
+    const ny = clamp(Math.round(y + dy), span.minY, span.maxY);
+    if (!Number.isFinite(nx) || !Number.isFinite(ny)) return;
+    pinWin.setPosition(nx, ny);
+    pinBounds = { x: nx, y: ny };
+  } catch {
+    /* Skip this move rather than crash if setPosition still rejects it. */
+  }
 }
 
 /** Snap the pinned window to the nearest corner of its display's work area. */
