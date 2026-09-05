@@ -30,6 +30,26 @@ let dashboard: BrowserWindow | null = null;
 let pinWin: BrowserWindow | null = null;
 let pinBounds: { x: number; y: number } | null = null;
 
+// After the popover has been hidden this long, destroy it to free its renderer
+// process. It's cheaply recreated on the next tray click. Keeps an idle
+// tray-only app down to just the main process (no resident renderers).
+let popoverIdleTimer: NodeJS.Timeout | null = null;
+const POPOVER_IDLE_MS = 20000;
+
+function cancelPopoverTeardown(): void {
+  if (popoverIdleTimer) {
+    clearTimeout(popoverIdleTimer);
+    popoverIdleTimer = null;
+  }
+}
+
+function schedulePopoverTeardown(): void {
+  cancelPopoverTeardown();
+  popoverIdleTimer = setTimeout(() => {
+    if (popover && !popover.isDestroyed() && !popover.isVisible()) popover.close();
+  }, POPOVER_IDLE_MS);
+}
+
 export function getPopover(): BrowserWindow | null {
   return popover;
 }
@@ -72,11 +92,12 @@ export function createPopover(): BrowserWindow {
 
   // Hide (not close) when it loses focus, like a native menu-bar popover.
   popover.on('blur', () => {
-    if (popover && !popover.webContents.isDevToolsOpened()) popover.hide();
+    if (popover && !popover.webContents.isDevToolsOpened()) hidePopover();
   });
 
   popover.on('closed', () => {
     popover = null;
+    cancelPopoverTeardown();
   });
 
   return popover;
@@ -86,12 +107,21 @@ export function createPopover(): BrowserWindow {
 export function togglePopover(trayBounds?: Electron.Rectangle): void {
   const win = createPopover();
   if (win.isVisible()) {
-    win.hide();
+    hidePopover();
     return;
   }
-  positionPopover(win, trayBounds);
-  win.show();
-  win.focus();
+  cancelPopoverTeardown();
+  const reveal = () => {
+    if (!win.isDestroyed()) {
+      positionPopover(win, trayBounds);
+      win.show();
+      win.focus();
+    }
+  };
+  // On a freshly (re)created popover the page is still loading — wait for it so
+  // we don't flash a blank transparent window; reused windows show instantly.
+  if (win.webContents.isLoading()) win.webContents.once('did-finish-load', reveal);
+  else reveal();
 }
 
 /** Popover design size at 1.0x zoom. */
@@ -140,7 +170,10 @@ function positionPopover(win: BrowserWindow, trayBounds?: Electron.Rectangle): v
 }
 
 export function hidePopover(): void {
-  if (popover && !popover.isDestroyed()) popover.hide();
+  if (popover && !popover.isDestroyed()) {
+    popover.hide();
+    schedulePopoverTeardown();
+  }
 }
 
 export function openDashboard(tab?: string): BrowserWindow {

@@ -36,6 +36,10 @@ export interface Settings {
   productAnalyticsEnabled: boolean;
   /** Check for updates on launch. */
   updateCheckEnabled: boolean;
+  /** Start a focus session automatically when the app launches. */
+  autoStartFocusOnLaunch: boolean;
+  /** Open the always-on-top floating mini-timer when the app launches. */
+  openPinOnLaunch: boolean;
   /** Smart Nudge: warn after this many minutes of idle time mid-session. */
   smartNudgeIdleMinutes: number;
   /** Size of the pinned floating timer. */
@@ -62,6 +66,8 @@ export const DEFAULT_SETTINGS: Settings = {
   activeAppTrackingEnabled: true,
   productAnalyticsEnabled: false,
   updateCheckEnabled: true,
+  autoStartFocusOnLaunch: false,
+  openPinOnLaunch: false,
   smartNudgeIdleMinutes: 3,
   pinSize: 'compact',
   shortcuts: {

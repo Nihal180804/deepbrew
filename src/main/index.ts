@@ -7,7 +7,6 @@ import { loadSettings } from './db/settings-store.js';
 import { TimerController } from './timer-controller.js';
 import { createTray, updateTray, destroyTray, setTrayPinned } from './tray.js';
 import {
-  createPopover,
   togglePopover,
   hidePopover,
   openDashboard,
@@ -80,9 +79,6 @@ async function main(): Promise<void> {
     notify: (opts) => notify(opts)
   });
 
-  // Pre-create the popover so the first tray click is instant.
-  createPopover();
-
   createTray({
     onToggle: () => controller.toggle(),
     onStart: () => controller.start(),
@@ -131,6 +127,15 @@ async function main(): Promise<void> {
 
   // Push an initial snapshot so tray + any open window render immediately.
   updateTray(controller.getSnapshot());
+
+  // Optional launch behaviors.
+  if (settings.openPinOnLaunch && !isPinned()) {
+    togglePin();
+    setTrayPinned(true);
+  }
+  if (settings.autoStartFocusOnLaunch) {
+    controller.start();
+  }
 
   app.on('before-quit', () => {
     isQuitting = true;

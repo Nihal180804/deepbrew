@@ -76,8 +76,14 @@ export function SettingsPanel({ settings, update, onToast }: Props) {
           <Select value={settings.theme} onChange={(v) => update({ theme: v as Settings['theme'] })}
             options={[['system', 'System'], ['light', 'Light'], ['dark', 'Dark']]} />
         </SRow>
-        <SRow name="Start on login">
+        <SRow name="Start on login" desc="Launch Deepbrew automatically when you sign in to Windows.">
           <Toggle on={settings.autostart} onChange={(v) => update({ autostart: v })} />
+        </SRow>
+        <SRow name="Start focus on launch" desc="Begin a focus session automatically when the app opens.">
+          <Toggle on={settings.autoStartFocusOnLaunch} onChange={(v) => update({ autoStartFocusOnLaunch: v })} />
+        </SRow>
+        <SRow name="Show pin on launch" desc="Open the floating mini-timer when the app opens.">
+          <Toggle on={settings.openPinOnLaunch} onChange={(v) => update({ openPinOnLaunch: v })} />
         </SRow>
         <SRow name="Pinned timer size">
           <Select value={settings.pinSize} onChange={(v) => update({ pinSize: v as Settings['pinSize'] })}
