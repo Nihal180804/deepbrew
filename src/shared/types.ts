@@ -40,6 +40,8 @@ export interface Settings {
   autoStartFocusOnLaunch: boolean;
   /** Open the always-on-top floating mini-timer when the app launches. */
   openPinOnLaunch: boolean;
+  /** Reduce memory by disabling GPU acceleration (needs a restart). */
+  reduceMemory: boolean;
   /** Smart Nudge: warn after this many minutes of idle time mid-session. */
   smartNudgeIdleMinutes: number;
   /** Size of the pinned floating timer. */
@@ -68,6 +70,7 @@ export const DEFAULT_SETTINGS: Settings = {
   updateCheckEnabled: true,
   autoStartFocusOnLaunch: false,
   openPinOnLaunch: false,
+  reduceMemory: false,
   smartNudgeIdleMinutes: 3,
   pinSize: 'compact',
   shortcuts: {

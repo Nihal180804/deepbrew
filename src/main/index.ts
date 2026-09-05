@@ -49,6 +49,14 @@ if (!gotLock) {
   app.quit();
 } else {
   app.on('second-instance', () => togglePopover());
+  // GPU acceleration can only be turned off before the app is ready. When the
+  // user opts into low-memory mode, drop the GPU process (~40-60MB); the simple
+  // 2D UI renders fine in software.
+  try {
+    if (loadSettings().reduceMemory) app.disableHardwareAcceleration();
+  } catch {
+    /* first run / DB not ready — keep acceleration on */
+  }
   void main();
 }
 

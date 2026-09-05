@@ -85,6 +85,9 @@ export function SettingsPanel({ settings, update, onToast }: Props) {
         <SRow name="Show pin on launch" desc="Open the floating mini-timer when the app opens.">
           <Toggle on={settings.openPinOnLaunch} onChange={(v) => update({ openPinOnLaunch: v })} />
         </SRow>
+        <SRow name="Reduce memory usage" desc="Turns off GPU acceleration to lower RAM (~50 MB). Transparent edges may look less smooth. Restart to apply.">
+          <Toggle on={settings.reduceMemory} onChange={(v) => update({ reduceMemory: v })} />
+        </SRow>
         <SRow name="Pinned timer size">
           <Select value={settings.pinSize} onChange={(v) => update({ pinSize: v as Settings['pinSize'] })}
             options={[['compact', 'Compact'], ['medium', 'Medium'], ['large', 'Large']]} />
