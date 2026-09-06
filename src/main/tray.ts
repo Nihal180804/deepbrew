@@ -49,8 +49,23 @@ export function createTray(h: TrayHandlers): Tray {
   tray = new Tray(renderTrayIcon(initial));
   tray.setToolTip('Deepbrew');
 
+  // Single click → popover; double click → open the dashboard directly. The
+  // single click is debounced so a double click doesn't flash the popover open
+  // first (Windows fires 'click' before 'double-click').
+  let clickTimer: NodeJS.Timeout | null = null;
   tray.on('click', (_e, bounds) => {
-    handlers?.onOpenPopover(bounds);
+    if (clickTimer) clearTimeout(clickTimer);
+    clickTimer = setTimeout(() => {
+      clickTimer = null;
+      handlers?.onOpenPopover(bounds);
+    }, 220);
+  });
+  tray.on('double-click', () => {
+    if (clickTimer) {
+      clearTimeout(clickTimer);
+      clickTimer = null;
+    }
+    handlers?.onOpenDashboard();
   });
   // Some Linux DEs only emit right-click as the context menu trigger; the menu
   // is set via setContextMenu so it appears on the platform-native gesture.

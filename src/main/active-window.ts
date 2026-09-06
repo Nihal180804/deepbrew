@@ -70,10 +70,23 @@ export async function getActiveApp(): Promise<ActiveApp | null> {
       | undefined;
     const name = result?.owner?.name;
     if (!name) return null;
-    return { name, path: result?.owner?.path ?? null };
+    const path = result?.owner?.path ?? null;
+    // Don't track Deepbrew itself — having the dashboard/popover focused
+    // shouldn't count as focus time spent "in an app".
+    if (isOwnApp(name, path)) return null;
+    return { name, path };
   } catch {
     return null;
   }
+}
+
+/** True when the focused window belongs to Deepbrew (this process). */
+function isOwnApp(name: string, path: string | null): boolean {
+  if (path && process.execPath) {
+    if (path.toLowerCase() === process.execPath.toLowerCase()) return true;
+  }
+  // Fallback when the path is unavailable.
+  return name.trim().toLowerCase() === 'deepbrew';
 }
 
 /** Returns the focused application's name, or null if unavailable. */

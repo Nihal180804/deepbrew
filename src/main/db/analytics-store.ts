@@ -121,7 +121,7 @@ export function getTopApps(limit = 6, sinceDays = 30): AppStat[] {
               i.data_url AS iconDataUrl
        FROM sessions s
        LEFT JOIN app_icons i ON i.app_name = s.app_name
-       WHERE s.phase='work' AND s.app_name IS NOT NULL AND s.started_at >= ?
+       WHERE s.phase='work' AND s.app_name IS NOT NULL AND s.app_name != 'Deepbrew' AND s.started_at >= ?
        GROUP BY s.app_name ORDER BY focusMs DESC LIMIT ?`
     )
     .all(from, limit) as AppStat[];
@@ -190,7 +190,7 @@ export function getPersonaData(range: 'today' | 'week'): PersonaCardData {
               i.data_url AS iconDataUrl
        FROM sessions s
        LEFT JOIN app_icons i ON i.app_name = s.app_name
-       WHERE s.phase='work' AND s.app_name IS NOT NULL AND s.started_at >= ?
+       WHERE s.phase='work' AND s.app_name IS NOT NULL AND s.app_name != 'Deepbrew' AND s.started_at >= ?
        GROUP BY s.app_name ORDER BY focusMs DESC LIMIT 3`
     )
     .all(from) as AppStat[];
