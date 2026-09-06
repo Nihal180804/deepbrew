@@ -57,6 +57,9 @@ export function SettingsPanel({ settings, update, onToast }: Props) {
         <SRow name="Auto-transition" desc="Flow work → break → work automatically.">
           <Toggle on={settings.autoTransition} onChange={(v) => update({ autoTransition: v })} />
         </SRow>
+        <SRow name="Idle auto-pause" desc="Pause a focus session after this many idle minutes; resumes when you return. 0 disables.">
+          <Stepper value={settings.idleAutoPauseMinutes} min={0} max={60} unit="min" onChange={(v) => update({ idleAutoPauseMinutes: v })} />
+        </SRow>
       </Group>
 
       <Group title="Notifications">

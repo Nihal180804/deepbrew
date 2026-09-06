@@ -35,6 +35,10 @@ export class TimerController {
   private appSampleHandle: NodeJS.Timeout | null = null;
   private appSamples = new Map<string, number>();
   private nudgedThisPhase = false;
+  private idleWatchHandle: NodeJS.Timeout | null = null;
+  /** True when the current pause was triggered by idle auto-pause (so we know
+   *  to auto-resume on return, and not to fight a manual pause). */
+  private autoPaused = false;
   private readonly deps: TimerControllerDeps;
 
   constructor(deps: TimerControllerDeps) {
@@ -102,11 +106,15 @@ export class TimerController {
   dispose(): void {
     this.stopTicking();
     this.stopAppSampling();
+    this.stopIdleWatch();
   }
 
   // ---- internals ----------------------------------------------------------
 
-  private dispatch(action: Parameters<typeof reduce>[1]): void {
+  private dispatch(action: Parameters<typeof reduce>[1], internal = false): void {
+    // Any user-initiated action cancels an outstanding idle auto-pause so the
+    // idle watcher won't undo what the user just did.
+    if (!internal) this.autoPaused = false;
     const now = Date.now();
     const prev = this.state;
     const { state, events } = reduce(this.state, action, this.config, now);
@@ -205,12 +213,55 @@ export class TimerController {
     this.appSamples.clear();
     this.startAppSampling();
     void this.sampleApp();
+    this.startIdleWatch();
   }
 
   private resetPhaseBookkeeping(): void {
     this.appSamples.clear();
     this.nudgedThisPhase = false;
     this.stopAppSampling();
+    this.stopIdleWatch();
+  }
+
+  // ---- idle auto-pause ----------------------------------------------------
+
+  private startIdleWatch(): void {
+    if (this.idleWatchHandle) return;
+    // Runs from a phase's start until it ends — across running AND auto-paused,
+    // so we can detect when the user comes back and auto-resume.
+    this.idleWatchHandle = setInterval(() => this.checkIdleAutoPause(), 2000);
+  }
+
+  private stopIdleWatch(): void {
+    if (this.idleWatchHandle) {
+      clearInterval(this.idleWatchHandle);
+      this.idleWatchHandle = null;
+    }
+    this.autoPaused = false;
+  }
+
+  private checkIdleAutoPause(): void {
+    const thresholdSec = Math.round((this.deps.getSettings().idleAutoPauseMinutes || 0) * 60);
+    if (thresholdSec <= 0) {
+      // Disabled mid-session: don't leave an auto-paused timer stuck — resume it.
+      if (this.autoPaused && this.state.status === 'paused') {
+        this.autoPaused = false;
+        this.dispatch({ type: 'RESUME' }, true);
+      }
+      this.autoPaused = false;
+      return;
+    }
+    // Only auto-pause focus (work) phases — being idle during a break is fine.
+    if (this.state.phase !== 'work') return;
+    const idle = safeIdleSeconds();
+    if (this.state.status === 'running' && idle >= thresholdSec) {
+      this.autoPaused = true;
+      this.dispatch({ type: 'PAUSE' }, true);
+    } else if (this.state.status === 'paused' && this.autoPaused && idle < 3) {
+      // The user is back (fresh input resets idle time) — resume where we left.
+      this.autoPaused = false;
+      this.dispatch({ type: 'RESUME' }, true);
+    }
   }
 
   // ---- ticking ------------------------------------------------------------

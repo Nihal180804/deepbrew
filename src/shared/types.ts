@@ -44,6 +44,9 @@ export interface Settings {
   reduceMemory: boolean;
   /** Smart Nudge: warn after this many minutes of idle time mid-session. */
   smartNudgeIdleMinutes: number;
+  /** Auto-pause a focus session after this many idle minutes; resumes on
+   *  return. 0 disables. Keeps focus stats honest when you step away. */
+  idleAutoPauseMinutes: number;
   /** Size of the pinned floating timer. */
   pinSize: PinSize;
   /** Global keyboard shortcuts (Electron accelerator strings). */
@@ -72,6 +75,7 @@ export const DEFAULT_SETTINGS: Settings = {
   openPinOnLaunch: false,
   reduceMemory: false,
   smartNudgeIdleMinutes: 3,
+  idleAutoPauseMinutes: 5,
   pinSize: 'compact',
   shortcuts: {
     startPause: 'CommandOrControl+Shift+Space',
