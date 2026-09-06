@@ -43,12 +43,13 @@ process.on('unhandledRejection', (reason) => {
   console.error('[main] unhandled rejection:', reason);
 });
 
-// Single-instance: a second launch just focuses/open the popover.
+// Single-instance: launching the app again (e.g. from Start-menu search) opens
+// the dashboard and focuses it, rather than silently no-op'ing into the tray.
 const gotLock = app.requestSingleInstanceLock();
 if (!gotLock) {
   app.quit();
 } else {
-  app.on('second-instance', () => togglePopover());
+  app.on('second-instance', () => openDashboard());
   // GPU acceleration can only be turned off before the app is ready. When the
   // user opts into low-memory mode, drop the GPU process (~40-60MB); the simple
   // 2D UI renders fine in software.
@@ -143,6 +144,12 @@ async function main(): Promise<void> {
   }
   if (settings.autoStartFocusOnLaunch) {
     controller.start();
+  }
+  // Show the dashboard when the user launches the app themselves (Start-menu
+  // search, desktop shortcut, etc.). Auto-start-on-login passes `--hidden`, so
+  // that path stays quietly in the tray.
+  if (!process.argv.includes('--hidden')) {
+    openDashboard();
   }
 
   app.on('before-quit', () => {
