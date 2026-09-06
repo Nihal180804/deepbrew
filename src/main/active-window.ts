@@ -6,6 +6,8 @@
  * and the dashboard surfaces that state in Settings.
  */
 
+import { createRequire } from 'node:module';
+
 type ActiveWinFn = (opts?: unknown) => Promise<unknown>;
 let activeWinFn: ActiveWinFn | null = null;
 let loadAttempted = false;
@@ -31,11 +33,13 @@ async function ensureLoaded(): Promise<void> {
   }
 
   try {
-    // active-win is an optional dependency; import lazily so a missing/native
-    // build never breaks app startup. v8 exports a callable default.
-    const mod = (await import('active-win')) as unknown as {
-      default?: ActiveWinFn;
-    } & ActiveWinFn;
+    // active-win is an optional dependency; load it lazily so a missing/native
+    // build never breaks app startup. Use a CJS require (like better-sqlite3)
+    // rather than a dynamic import() — the latter is unreliable for a native
+    // CommonJS module resolved from inside an asar in packaged builds, which is
+    // what made active-app tracking report "unavailable" in production.
+    const nativeRequire = createRequire(__filename);
+    const mod = nativeRequire('active-win') as ActiveWinFn & { default?: ActiveWinFn };
     activeWinFn = (mod.default ?? mod) as ActiveWinFn;
     supported = typeof activeWinFn === 'function';
   } catch {

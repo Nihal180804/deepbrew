@@ -9,7 +9,11 @@ const sharedAlias = {
 
 export default defineConfig({
   main: {
-    plugins: [externalizeDepsPlugin()],
+    // active-win is an optionalDependency, which externalizeDepsPlugin does not
+    // externalize by default — without `include` it gets bundled into the main
+    // chunk, which breaks its native binding resolution at runtime (active-app
+    // tracking then reports "unavailable" in packaged builds). Keep it external.
+    plugins: [externalizeDepsPlugin({ include: ['active-win'] })],
     resolve: { alias: sharedAlias },
     build: {
       rollupOptions: {
