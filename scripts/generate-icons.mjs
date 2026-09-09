@@ -1,67 +1,12 @@
-// Generates the Deepbrew app icon (coffee cup, warm tones) as a PNG.
-// Used as the window icon and as the electron-builder source icon.
+// Generates the Deepbrew app icon as a PNG: a white coffee mug inside a focus
+// (timer) ring, on a dark rounded square — matching the app's monochrome
+// identity. Used as the window icon and the electron-builder source icon.
 import { createCanvas } from '@napi-rs/canvas';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
-
-function drawIcon(size) {
-  const c = createCanvas(size, size);
-  const ctx = c.getContext('2d');
-  const s = size / 512;
-
-  // Rounded warm background.
-  const r = 96 * s;
-  const grad = ctx.createLinearGradient(0, 0, size, size);
-  grad.addColorStop(0, '#3b2f28');
-  grad.addColorStop(1, '#5a463a');
-  roundRect(ctx, 0, 0, size, size, r);
-  ctx.fillStyle = grad;
-  ctx.fill();
-
-  // Saucer.
-  ctx.fillStyle = '#e7d3bf';
-  ctx.beginPath();
-  ctx.ellipse(256 * s, 372 * s, 150 * s, 34 * s, 0, 0, Math.PI * 2);
-  ctx.fill();
-
-  // Cup body.
-  ctx.fillStyle = '#f3e6d6';
-  roundRect(ctx, 156 * s, 210 * s, 170 * s, 150 * s, 24 * s);
-  ctx.fill();
-
-  // Cup rim.
-  ctx.fillStyle = '#ffffff';
-  ctx.beginPath();
-  ctx.ellipse(241 * s, 214 * s, 86 * s, 20 * s, 0, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.fillStyle = '#7b4b28';
-  ctx.beginPath();
-  ctx.ellipse(241 * s, 214 * s, 70 * s, 14 * s, 0, 0, Math.PI * 2);
-  ctx.fill();
-
-  // Handle.
-  ctx.lineWidth = 22 * s;
-  ctx.strokeStyle = '#f3e6d6';
-  ctx.beginPath();
-  ctx.arc(330 * s, 275 * s, 42 * s, -Math.PI / 2, Math.PI / 2);
-  ctx.stroke();
-
-  // Steam.
-  ctx.strokeStyle = 'rgba(231,211,191,0.85)';
-  ctx.lineWidth = 12 * s;
-  ctx.lineCap = 'round';
-  for (const x of [212, 268]) {
-    ctx.beginPath();
-    ctx.moveTo(x * s, 180 * s);
-    ctx.bezierCurveTo((x + 30) * s, 150 * s, (x - 30) * s, 120 * s, x * s, 90 * s);
-    ctx.stroke();
-  }
-
-  return c;
-}
 
 function roundRect(ctx, x, y, w, h, r) {
   ctx.beginPath();
@@ -71,6 +16,84 @@ function roundRect(ctx, x, y, w, h, r) {
   ctx.arcTo(x, y + h, x, y, r);
   ctx.arcTo(x, y, x + w, y, r);
   ctx.closePath();
+}
+
+function drawIcon(size) {
+  const c = createCanvas(size, size);
+  const ctx = c.getContext('2d');
+  const P = (v) => (v * size) / 512; // design in a 512 space, scaled
+  const cx = size / 2;
+  const cy = size / 2;
+
+  // Background: dark rounded square with a subtle gradient.
+  const bg = ctx.createLinearGradient(0, 0, size, size);
+  bg.addColorStop(0, '#1b1b1b');
+  bg.addColorStop(1, '#070707');
+  roundRect(ctx, 0, 0, size, size, P(112));
+  ctx.fillStyle = bg;
+  ctx.fill();
+
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+
+  // Focus/timer ring: faint full track + a bright ¾ arc with a tip dot.
+  ctx.strokeStyle = 'rgba(255,255,255,0.13)';
+  ctx.lineWidth = P(13);
+  ctx.beginPath();
+  ctx.arc(cx, cy, P(196), 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.strokeStyle = '#ffffff';
+  ctx.lineWidth = P(16);
+  ctx.beginPath();
+  ctx.arc(cx, cy, P(196), -Math.PI / 2, -Math.PI / 2 + Math.PI * 1.5);
+  ctx.stroke();
+  ctx.fillStyle = '#ffffff';
+  ctx.beginPath();
+  ctx.arc(cx, cy - P(196), P(11), 0, Math.PI * 2);
+  ctx.fill();
+
+  // Coffee mug, nudged down so it sits centered within the ring.
+  const yo = P(14);
+
+  // Steam.
+  ctx.strokeStyle = 'rgba(255,255,255,0.9)';
+  ctx.lineWidth = P(13);
+  for (const sx of [-30, 30]) {
+    ctx.beginPath();
+    ctx.moveTo(cx + P(sx), cy - P(60) + yo);
+    ctx.bezierCurveTo(
+      cx + P(sx + 26), cy - P(90) + yo,
+      cx + P(sx - 26), cy - P(120) + yo,
+      cx + P(sx), cy - P(150) + yo
+    );
+    ctx.stroke();
+  }
+
+  // Saucer.
+  ctx.fillStyle = '#ffffff';
+  ctx.beginPath();
+  ctx.ellipse(cx, cy + P(120) + yo, P(140), P(26), 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Handle.
+  ctx.strokeStyle = '#ffffff';
+  ctx.lineWidth = P(24);
+  ctx.beginPath();
+  ctx.arc(cx + P(78), cy + P(18) + yo, P(46), -Math.PI / 2.2, Math.PI / 2.2);
+  ctx.stroke();
+
+  // Cup body.
+  ctx.fillStyle = '#ffffff';
+  roundRect(ctx, cx - P(80), cy - P(40) + yo, P(150), P(120), P(22));
+  ctx.fill();
+
+  // Coffee surface (negative space).
+  ctx.fillStyle = bg;
+  ctx.beginPath();
+  ctx.ellipse(cx - P(5), cy - P(38) + yo, P(66), P(15), 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  return c;
 }
 
 mkdirSync(join(root, 'build'), { recursive: true });
