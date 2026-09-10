@@ -44,7 +44,9 @@ win:
   target:
     - target: nsis
       arch: [x64]
-  icon: build/icon.png
+  # A hand-built multi-size .ico (each size rendered natively) keeps small
+  # taskbar/Start-menu icons crisp instead of downscaling one large PNG.
+  icon: build/icon.ico
 
 nsis:
   oneClick: false
