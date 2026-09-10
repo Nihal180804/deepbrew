@@ -924,9 +924,10 @@ button {
 }
 .chip-row {
   display: flex;
-  gap: 6px;
+  gap: 8px;
   flex-wrap: wrap;
   align-items: center;
+  margin-top: 12px;
 }
 .app-chip {
   display: inline-flex;
