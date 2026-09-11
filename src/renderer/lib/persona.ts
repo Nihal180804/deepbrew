@@ -22,7 +22,11 @@ const BG = '#0d0d0d';
 const TRACK = 'rgba(245,245,245,0.12)';
 const FONT = '"Segoe UI", system-ui, -apple-system, sans-serif';
 
-export function drawPersonaCard(canvas: HTMLCanvasElement, data: PersonaCardData): void {
+export function drawPersonaCard(
+  canvas: HTMLCanvasElement,
+  data: PersonaCardData,
+  avatar?: CanvasImageSource
+): void {
   const scale = 2;
   canvas.width = W * scale;
   canvas.height = H * scale;
@@ -58,16 +62,31 @@ export function drawPersonaCard(canvas: HTMLCanvasElement, data: PersonaCardData
   ctx.fillText(data.rangeLabel.toUpperCase() + ' · FOCUS PERSONA', W - PAD, 54);
   ctx.textAlign = 'left';
 
+  // Persona avatar (top-right): the character that matches this work style.
+  // Reserve the right column so the hero text never runs under it.
+  const avatarBox = { w: 128, h: 130, x: W - PAD - 128, y: 60 };
+  if (avatar) {
+    const iw = (avatar as { width?: number }).width ?? avatarBox.w;
+    const ih = (avatar as { height?: number }).height ?? avatarBox.h;
+    const ar = iw / ih;
+    let w = avatarBox.w;
+    let h = avatarBox.h;
+    if (ar > avatarBox.w / avatarBox.h) h = w / ar;
+    else w = h * ar;
+    ctx.drawImage(avatar, avatarBox.x + (avatarBox.w - w) / 2, avatarBox.y + (avatarBox.h - h) / 2, w, h);
+  }
+  const heroMaxW = avatarBox.x - PAD - 18;
+
   // Hero: work style.
   ctx.fillStyle = GRAY;
   ctx.font = `600 12px ${FONT}`;
   ctx.fillText('YOUR WORK STYLE', PAD, 96);
   ctx.fillStyle = INK;
-  ctx.font = `800 46px ${FONT}`;
-  ctx.fillText(data.workStyle, PAD, 140);
+  ctx.font = `800 42px ${FONT}`;
+  ctx.fillText(truncate(ctx, data.workStyle, heroMaxW), PAD, 140);
   ctx.fillStyle = GRAY;
   ctx.font = `400 16px ${FONT}`;
-  ctx.fillText(data.workStyleBlurb, PAD, 168);
+  ctx.fillText(truncate(ctx, data.workStyleBlurb, heroMaxW), PAD, 168);
 
   hRule(ctx, PAD, 194, W - PAD);
 

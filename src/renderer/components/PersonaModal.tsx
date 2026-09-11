@@ -2,6 +2,22 @@ import { useEffect, useRef, useState } from 'react';
 import type { PersonaCardData } from '@shared/types.js';
 import { drawPersonaCard } from '../lib/persona.js';
 
+// Persona avatars: one profession doodle per work style, vectorised to SVG.
+const personaSvgs = import.meta.glob('../assets/personas/*.svg', {
+  eager: true,
+  query: '?raw',
+  import: 'default'
+}) as Record<string, string>;
+
+function avatarUrlFor(workStyle: string): string | null {
+  const slug = workStyle.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+  const entry = Object.entries(personaSvgs).find(([path]) => path.endsWith(`/${slug}.svg`));
+  if (!entry) return null;
+  // Recolour the black trace to the card's ink so it reads on the dark card.
+  const svg = entry[1].replace(/#111111/gi, '#f5f5f5');
+  return 'data:image/svg+xml;utf8,' + encodeURIComponent(svg);
+}
+
 interface Props {
   open: boolean;
   onClose: () => void;
@@ -16,15 +32,29 @@ interface Props {
 export function PersonaModal({ open, onClose, onToast }: Props) {
   const [range, setRange] = useState<'today' | 'week'>('today');
   const [data, setData] = useState<PersonaCardData | null>(null);
+  const [avatar, setAvatar] = useState<HTMLImageElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
     if (open) void window.kofe.getPersona(range).then(setData);
   }, [open, range]);
 
+  // Load the persona's avatar image when the work style changes.
   useEffect(() => {
-    if (open && data && canvasRef.current) drawPersonaCard(canvasRef.current, data);
-  }, [open, data]);
+    setAvatar(null);
+    if (!data) return;
+    const url = avatarUrlFor(data.workStyle);
+    if (!url) return;
+    const img = new Image();
+    img.onload = () => setAvatar(img);
+    img.src = url;
+  }, [data]);
+
+  useEffect(() => {
+    if (open && data && canvasRef.current) {
+      drawPersonaCard(canvasRef.current, data, avatar ?? undefined);
+    }
+  }, [open, data, avatar]);
 
   useEffect(() => {
     if (!open) return;
