@@ -27,6 +27,9 @@ export interface TimerControllerDeps {
 }
 
 const APP_SAMPLE_INTERVAL_MS = 15_000;
+/** Extra idle time, beyond the auto-pause threshold, after which a work session
+ *  is stopped outright rather than left paused. */
+const IDLE_STOP_GRACE_SEC = 300;
 
 export class TimerController {
   private state: TimerState;
@@ -254,6 +257,27 @@ export class TimerController {
     // Only auto-pause focus (work) phases — being idle during a break is fine.
     if (this.state.phase !== 'work') return;
     const idle = safeIdleSeconds();
+
+    // Prolonged idle → end the session entirely, so nothing keeps accruing (and
+    // auto-transition can't quietly cycle work→break→work for hours) while the
+    // user is away. Applies whether the phase is still running or auto-paused.
+    const stopSec = thresholdSec + IDLE_STOP_GRACE_SEC;
+    if (
+      idle >= stopSec &&
+      (this.state.status === 'running' || (this.state.status === 'paused' && this.autoPaused))
+    ) {
+      this.autoPaused = false;
+      this.dispatch({ type: 'STOP' }, true);
+      const settings = this.deps.getSettings();
+      if (settings.notificationsEnabled) {
+        this.deps.notify({
+          title: 'Session ended',
+          body: 'You were away for a while, so Deepbrew stopped the timer.'
+        });
+      }
+      return;
+    }
+
     if (this.state.status === 'running' && idle >= thresholdSec) {
       this.autoPaused = true;
       this.dispatch({ type: 'PAUSE' }, true);
@@ -359,6 +383,17 @@ export class TimerController {
 
   private onResync(): void {
     const now = Date.now();
+    // Resumed from a long sleep/suspend that ran well past the current phase?
+    // The user was away — end the session instead of auto-completing and
+    // cascading into fresh phases (which could otherwise silently log hours).
+    if (
+      this.state.status === 'running' &&
+      this.state.runStartedAt !== null &&
+      now - this.state.runStartedAt > this.state.totalMs + 60_000
+    ) {
+      this.dispatch({ type: 'STOP' });
+      return;
+    }
     const prev = this.state;
     const { state, events } = reduce(this.state, { type: 'RESYNC' }, this.config, now);
     this.state = state;
