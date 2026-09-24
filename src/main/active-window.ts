@@ -7,6 +7,7 @@
  */
 
 import { createRequire } from 'node:module';
+import { SYSTEM_EXES, SYSTEM_APP_NAMES } from '@shared/system-apps.js';
 
 type ActiveWinFn = (opts?: unknown) => Promise<unknown>;
 let activeWinFn: ActiveWinFn | null = null;
@@ -71,9 +72,10 @@ export async function getActiveApp(): Promise<ActiveApp | null> {
     const name = result?.owner?.name;
     if (!name) return null;
     const path = result?.owner?.path ?? null;
-    // Don't track Deepbrew itself — having the dashboard/popover focused
-    // shouldn't count as focus time spent "in an app".
-    if (isOwnApp(name, path)) return null;
+    // Don't track Deepbrew itself, or OS shell/system processes that briefly
+    // steal focus (lock screen, search, Start menu…) — none of that is real
+    // "focus time spent in an app".
+    if (isOwnApp(name, path) || isSystemApp(name, path)) return null;
     return { name, path };
   } catch {
     return null;
@@ -87,6 +89,16 @@ function isOwnApp(name: string, path: string | null): boolean {
   }
   // Fallback when the path is unavailable.
   return name.trim().toLowerCase() === 'deepbrew';
+}
+
+/** OS shell/system surfaces (lock screen, search, Start menu…) — see
+ *  @shared/system-apps. Matched by executable, with a name fallback. */
+function isSystemApp(name: string, path: string | null): boolean {
+  if (path) {
+    const exe = path.split(/[\\/]/).pop()?.toLowerCase();
+    if (exe && SYSTEM_EXES.has(exe)) return true;
+  }
+  return SYSTEM_APP_NAMES.includes(name.trim().toLowerCase());
 }
 
 /** Returns the focused application's name, or null if unavailable. */

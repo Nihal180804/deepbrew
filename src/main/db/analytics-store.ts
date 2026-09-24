@@ -1,6 +1,7 @@
 import { getDb } from './database.js';
 import { computeStreaks, localDayKey } from '@shared/streaks.js';
 import { deriveWorkStyle } from '@shared/work-style.js';
+import { SYSTEM_APP_NAMES } from '@shared/system-apps.js';
 import type {
   AppStat,
   DailyStat,
@@ -257,4 +258,21 @@ export function exportAllData(): { sessions: SessionRecord[] } {
 export function deleteAllData(): void {
   getDb().prepare('DELETE FROM sessions').run();
   getDb().prepare('DELETE FROM app_icons').run();
+}
+
+/**
+ * Clear the app attribution on any previously-logged sessions that were tagged
+ * with an OS shell/system surface (lock screen, search, Start menu…). Keeps the
+ * focus time; just drops the bad "app" so it stops polluting Top Activity. Also
+ * removes those apps' cached icons. Run once at startup.
+ */
+export function pruneSystemApps(): void {
+  const names = SYSTEM_APP_NAMES;
+  const placeholders = names.map(() => '?').join(',');
+  getDb()
+    .prepare(`UPDATE sessions SET app_name = NULL WHERE LOWER(app_name) IN (${placeholders})`)
+    .run(...names);
+  getDb()
+    .prepare(`DELETE FROM app_icons WHERE LOWER(app_name) IN (${placeholders})`)
+    .run(...names);
 }

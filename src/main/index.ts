@@ -4,6 +4,7 @@ import { IPC } from '@shared/ipc-contract.js';
 import type { Settings, TimerSnapshot } from '@shared/types.js';
 import { getDb, closeDb } from './db/database.js';
 import { loadSettings } from './db/settings-store.js';
+import { pruneSystemApps } from './db/analytics-store.js';
 import { TimerController } from './timer-controller.js';
 import { createTray, updateTray, destroyTray, setTrayPinned } from './tray.js';
 import {
@@ -74,6 +75,7 @@ async function main(): Promise<void> {
   setNotificationIcon(resolveIcon(resourcesRoot));
 
   getDb(); // open + migrate
+  pruneSystemApps(); // drop any previously-logged OS shell surfaces from stats
   const settings = loadSettings();
   applyTheme(settings);
   syncAutostart(settings);
