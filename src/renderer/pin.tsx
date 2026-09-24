@@ -127,6 +127,18 @@ function Pin() {
           </svg>
         </button>
       )}
+      {(running || paused) && (
+        <button
+          title={phase === 'work' ? 'Skip to break' : 'Skip to focus'}
+          aria-label={phase === 'work' ? 'Skip to break' : 'Skip to focus'}
+          onClick={() => send({ type: 'skip' })}
+        >
+          <svg width="13" height="13" viewBox="0 0 12 12" fill="currentColor" aria-hidden>
+            <path d="M2.5 1.8l5 4.2-5 4.2z" />
+            <rect x="8.4" y="1.6" width="1.9" height="8.8" rx="0.9" />
+          </svg>
+        </button>
+      )}
       <button className="pin-close" title="Unpin" aria-label="Unpin" onClick={() => void window.kofe.togglePin()}>
         <svg width="13" height="13" viewBox="0 0 12 12" stroke="currentColor" strokeWidth="1.6" aria-hidden>
           <path d="M2 2l8 8M10 2l-8 8" />
